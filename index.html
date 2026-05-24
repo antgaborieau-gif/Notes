@@ -421,10 +421,7 @@
         @media (max-width: 768px) and (orientation: portrait) {
             .title-text-ellipsis { display: none !important; }
         }
-        /* Cache le conteneur du radar sur mobile portrait */
-@media (max-width: 768px) and (orientation: portrait) {
-    #mainChart { /* On va cibler le canvas */ }
-}
+       
     </style>
 </head>
 <body class="system-theme">
@@ -1053,45 +1050,25 @@ function cycleTheme() {
         }
 
         function renderRadar(labels, datasets) { 
-    const ctx = document.getElementById('mainChart').getContext('2d');
-    if (globalChart) globalChart.destroy();
-    
-    const isDark = isEffectivelyDark();
-    const isMobilePortrait = window.innerWidth <= 768 && window.innerHeight > window.innerWidth;
-    
-    // Détecte si on doit forcer le mode barres sur mobile
-    const chartType = isMobilePortrait ? 'bar' : 'radar';
-    
-    // Si c'est en barres, on adapte les datasets pour Chart.js (les barres n'aiment pas la structure radar)
-    const chartData = isMobilePortrait ? {
-        labels: labels,
-        datasets: [{
-            label: 'Moyenne',
-            data: datasets[0].data,
-            backgroundColor: '#007AFF',
-            borderRadius: 6
-        }]
-    } : { labels, datasets };
-
-    globalChart = new Chart(ctx, { 
-        type: chartType, 
-        data: chartData, 
-        options: { 
-            responsive: true, 
-            maintainAspectRatio: false,
-            // Configuration spécifique pour le mode Barres sur mobile
-            scales: isMobilePortrait ? {
-                x: { ticks: { color: isDark ? '#AEAEB2' : '#1C1C1E', font: { size: 10 } } },
-                y: { min: 0, max: 20, grid: { color: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' } }
-            } : {
-                r: { 
-                    min: 10, max: 20, 
-                    pointLabels: { color: isDark ? '#AEAEB2' : '#1C1C1E', font: { size: 10 } } 
-                }
-            },
-            plugins: { legend: { display: !isMobilePortrait } }
-        } 
-    }); 
+            const ctx = document.getElementById('mainChart').getContext('2d'); if (globalChart) globalChart.destroy(); 
+            const isDark = isEffectivelyDark();
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
+            const labelColor = isDark ? '#AEAEB2' : '#1C1C1E';
+            globalChart = new Chart(ctx, { 
+                type: 'radar', data: { labels, datasets }, 
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    scales: { 
+                        r: { 
+                            min: 0, max: 20, 
+                            grid: { color: gridColor }, angleLines: { color: gridColor }, 
+                            pointLabels: { color: labelColor, font: { size: 10, weight: '600' } }, 
+                            ticks: { color: '#8E8E93', backdropColor: 'transparent', stepSize: 4 } 
+                        } 
+                    }, 
+                    plugins: { legend: { labels: { color: labelColor, boxWidth: 12, font: { size: 12 } } } } 
+                } 
+            }); 
 }
         }
 
