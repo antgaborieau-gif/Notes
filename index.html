@@ -5,11 +5,10 @@
     <!-- Optimisation stricte pour iPhone -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- === MODIFICATION : Balises pour l'ajout à l'écran d'accueil iOS (PWA) === -->
+    <!-- === Balises pour l'ajout à l'écran d'accueil iOS (PWA) === -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Carnet Pro">
-    <!-- Renomme l'image que tu m'as envoyée en "logo.png" et mets-la dans le même dossier -->
     <link rel="apple-touch-icon" href="logo.png">
     
     <title>Mon Carnet de Notes - Apple Pro Edition</title>
@@ -180,7 +179,6 @@
 
         .topbar-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
         
-        /* === MODIFICATION : Meilleur alignement pour h1 === */
         .topbar h1 { 
             font-size: 32px; font-weight: 700; letter-spacing: -0.8px; margin: 0; line-height: 1; 
             display: flex; align-items: center; gap: 10px; color: var(--txt-primaire);
@@ -189,7 +187,6 @@
         
         .title-text-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
 
-        /* === MODIFICATION : Suppression du margin-bottom négatif pour centrer l'icône === */
         .sidebar-toggle-btn {
             background: none; border: none; padding: 6px; border-radius: 8px; cursor: pointer; color: var(--system-blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
             transition: background-color 0.2s ease, opacity 0.2s ease;
@@ -203,14 +200,22 @@
             cursor: pointer; transition: all 0.2s ease; border: none; user-select: none; gap: 6px;
         }
 
+        /* --- DA Bouton Simulation (Œil / Oeil Barré) --- */
         .sim-toggle-pill { background-color: var(--system-gray6); color: var(--txt-secondaire); }
         .sim-toggle-pill.active { background-color: rgba(175, 82, 222, 0.12); color: var(--system-purple); }
         .sim-toggle-pill:hover { opacity: 0.8; }
-
         .sim-toggle-pill .icon-sim-on { display: none; }
         .sim-toggle-pill .icon-sim-off { display: inline-block; }
         .sim-toggle-pill.active .icon-sim-on { display: inline-block; }
         .sim-toggle-pill.active .icon-sim-off { display: none; }
+
+        /* --- DA Bouton Modifier (Crayon / Check) --- */
+        .edit-toggle-pill { background-color: rgba(0, 122, 255, 0.1); color: var(--system-blue); }
+        .edit-toggle-pill.active { background-color: var(--system-blue); color: #fff; }
+        .edit-toggle-pill .icon-edit-on { display: none; }
+        .edit-toggle-pill .icon-edit-off { display: inline-block; }
+        .edit-toggle-pill.active .icon-edit-on { display: inline-block; }
+        .edit-toggle-pill.active .icon-edit-off { display: none; }
 
         .icon-theme-light, .icon-theme-dark, .icon-theme-system { display: none; }
         body.light-theme .icon-theme-light { display: inline-block; }
@@ -218,12 +223,6 @@
         body.system-theme .icon-theme-system { display: inline-block; }
 
         .theme-circle-btn { padding: 0 !important; width: 34px; height: 34px; border-radius: 50% !important; flex-shrink: 0; }
-        .edit-toggle-pill { background-color: rgba(0, 122, 255, 0.1); color: var(--system-blue); }
-        .edit-toggle-pill.active { background-color: var(--system-blue); color: #fff; }
-
-        /* CSS DU BOUTON MODIFIER (SVG) */
-        .icon-edit-off, .icon-edit-on { display: none; }
-        .edit-toggle-pill:not(.active) .icon-edit-off { display: none; } /* Caché sur PC, on affiche le texte */
 
         body.is-editing .editable-text {
             background: rgba(0, 122, 255, 0.05); color: var(--txt-primaire); cursor: text; padding: 2px 6px; border-radius: 6px; min-width: 20px;
@@ -316,7 +315,7 @@
         .text-bad { color: var(--system-red); }
 
         .edit-only, .edit-only-flex, .edit-only-block { display: none !important; }
-        body.is-editing .edit-only { display: inline-flex !important; }
+        body.is-editing .edit-only { display: inline-block !important; }
         body.is-editing .edit-only-flex { display: flex !important; }
         body.is-editing .edit-only-block { display: block !important; }
 
@@ -366,10 +365,10 @@
             .apple-input { font-size: 16px; }
         }
 
-        /* --- VRAIE CORRECTION POUR MOBILE (ANTI-CHEVAUCHEMENT & CENTRAGE SVG) --- */
+        /* --- VRAIE CORRECTION POUR MOBILE --- */
         @media (max-width: 500px) {
             .topbar { padding: 10px 12px; gap: 8px; }
-            .topbar-left { gap: 8px; } 
+            .topbar-left { gap: 6px; } 
             .topbar h1 { font-size: 18px; }
             .topbar-actions { gap: 6px; }
             
@@ -384,24 +383,19 @@
                 align-items: center; 
             }
             
-            /* Cacher les textes, afficher les SVG au centre */
-            .ios-pill-btn .btn-text { display: none; }
+            /* Cacher TOUS les textes dans les pastilles, afficher uniquement les SVG au centre */
+            .ios-pill-btn span.btn-text { display: none; }
             .ios-pill-btn svg { margin: 0; display: block; }
-            
-            /* Gestion magique du bouton Éditer (Oeil / Check) sur mobile */
-            .edit-toggle-pill:not(.active) .icon-edit-off { display: block; }
-            .edit-toggle-pill.active .icon-edit-on { display: block; }
 
             .form-row { flex-direction: column; align-items: stretch; }
             .add-note-form { flex-direction: column; align-items: flex-start; }
             .apple-input { width: 100%; }
 
             /* Miniaturisation intelligente du Badge Moyen pour ne pas pousser les boutons */
-            .title-badge { font-size: 13px; padding: 4px 8px; margin-left: 6px !important; }
+            .title-badge { font-size: 13px; padding: 4px 8px; margin-left: auto; }
             .moy-text { display: none; } /* Enlève le mot "Moyenne :" pour sauver un espace colossal */
         }
 
-        /* --- MODIFICATION : Cacher le titre en mode portrait pour privilégier la moyenne --- */
         @media (max-width: 768px) and (orientation: portrait) {
             .title-text-ellipsis { display: none !important; }
         }
@@ -437,6 +431,7 @@
             
             <div class="topbar-actions">
                 <button id="sim-toggle-btn" class="ios-pill-btn sim-toggle-pill" onclick="toggleGlobalSimulationBtn()">
+                    <!-- Icône Simulation Originale -->
                     <svg class="icon-sim-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
@@ -449,16 +444,15 @@
                 </button>
                 
                 <button id="btn-edit-mode" class="ios-pill-btn edit-toggle-pill" onclick="toggleEditMode()">
-                    <span class="btn-text">Modifier</span>
-                    <!-- Icône Oeil (Consultation) -->
-                    <svg class="icon-edit-off" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
+                    <!-- Icône Crayon (Modifier) -->
+                    <svg class="icon-edit-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                     </svg>
-                    <!-- Icône Coche (Édition en cours -> Terminé) -->
-                    <svg class="icon-edit-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <!-- Icône Check (Terminer) -->
+                    <svg class="icon-edit-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
+                    <span class="btn-text">Modifier</span>
                 </button>
 
                 <button id="theme-toggle-btn" class="ios-pill-btn sim-toggle-pill theme-circle-btn" onclick="cycleTheme()" aria-label="Changer de thème">
@@ -571,11 +565,9 @@
         }
 
        function save(skipHistory = false) { 
-            // 1. Sauvegarde locale sur l'appareil
             localStorage.setItem('apple_notes_db_v6', JSON.stringify(db)); 
             if(!skipHistory) pushHistory(); 
             
-            // 2. Envoi simultané sur le Cloud
             userDocRef.set(db).catch(error => {
                 console.error("Erreur de synchronisation:", error);
             });
@@ -859,7 +851,6 @@
             if (activeView === 'page') {
                 const pageAvg = calcPageAvg(db.years[currentYear][currentPage]);
                 
-                // === MODIFICATION : style="margin-left: auto;" ajouté pour coller la moyenne à droite ===
                 title.innerHTML = `
                     <span class="${isEditMode ? 'editable-text' : ''} title-text-ellipsis" contenteditable="${isEditMode}" onblur="updatePageName('${currentPage}', this)" onkeydown="handleEditableKeydown(event, this)">${currentPage}</span>
                     <button class="icon-btn danger-zone edit-only" style="flex-shrink: 0;" onclick="deletePage()">${svgTrash}</button>
@@ -1043,7 +1034,6 @@
                         r: { 
                             min: 0, max: 20, 
                             grid: { color: gridColor }, angleLines: { color: gridColor }, 
-                            /* === MODIFICATION : Réduction de la police des labels de 12 à 10 === */
                             pointLabels: { color: labelColor, font: { size: 10, weight: '600' } }, 
                             ticks: { color: '#8E8E93', backdropColor: 'transparent', stepSize: 4 } 
                         } 
@@ -1083,7 +1073,6 @@
         });
 
         function init() {
-            // Chargement local par défaut (pour être super rapide)
             try { 
                 const saved = localStorage.getItem('apple_notes_db_v6'); 
                 if (saved) db = JSON.parse(saved); 
@@ -1114,7 +1103,6 @@
                     const localDataStr = JSON.stringify(db);
                     const cloudDataStr = JSON.stringify(cloudData);
                     
-                    // Si les données du cloud sont différentes, on met à jour l'écran
                     if (localDataStr !== cloudDataStr) {
                         db = cloudData;
                         localStorage.setItem('apple_notes_db_v6', JSON.stringify(db));
@@ -1123,7 +1111,6 @@
                         renderMainContent();
                     }
                 } else if (Object.keys(db.years).length > 0) {
-                    // C'est la toute première fois : on envoie les données locales vers le cloud vide
                     save(true);
                 }
             });
