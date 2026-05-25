@@ -2,10 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <!-- Optimisation stricte pour iPhone -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
-    <!-- === Balises pour l'ajout à l'écran d'accueil iOS (PWA) === -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Carnet Pro">
@@ -15,13 +13,12 @@
     
     <title>Mon Carnet de Notes</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- === DEBUT FIREBASE === -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
-    <!-- === FIN FIREBASE === -->
     <style>
         /* === VARIABLES THEME CLAIR === */
         :root, body.light-theme, body.system-theme {
+            color-scheme: light; /* Force les inputs natifs en mode clair */
             --system-blue: #007AFF;
             --system-green: #34C759;
             --system-orange: #FF9500;
@@ -50,6 +47,7 @@
 
         /* === VARIABLES THEME SOMBRE === */
         body.dark-theme {
+            color-scheme: dark; /* Force les inputs natifs en mode sombre */
             --system-blue: #0A84FF;
             --system-green: #30D158;
             --system-orange: #FF9F0A;
@@ -79,6 +77,7 @@
         /* === VARIABLES THEME AUTO === */
         @media (prefers-color-scheme: dark) {
             body.system-theme {
+                color-scheme: dark;
                 --system-blue: #0A84FF;
                 --system-green: #30D158;
                 --system-orange: #FF9F0A;
@@ -107,7 +106,9 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body { 
-            display: flex; height: 100vh; overflow: hidden;
+            display: flex; 
+            height: 100vh; height: 100dvh; /* Double déclaration pour rétrocompatibilité + DVH */
+            overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; 
             background-color: var(--bg-cahier); 
             color: var(--txt-primaire); 
@@ -117,7 +118,7 @@
 
         /* Overlay mobile pour le menu */
         .sidebar-overlay {
-            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
             background: rgba(0, 0, 0, 0.4); z-index: 90; opacity: 0;
             transition: opacity 0.3s ease; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
         }
@@ -173,7 +174,7 @@
 
         .topbar { 
             padding: calc(15px + env(safe-area-inset-top)) 40px 15px; 
-            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5;
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; 
             background: var(--bg-topbar); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--separator); min-height: 75px;
             transition: background-color 0.3s ease, border-color 0.3s ease;
             gap: 20px;
@@ -185,9 +186,11 @@
             font-size: 32px; font-weight: 700; letter-spacing: -0.8px; margin: 0; line-height: 1; 
             display: flex; align-items: center; gap: 10px; color: var(--txt-primaire);
             flex: 1; min-width: 0;
+            white-space: nowrap; 
         }
         
-        .title-text-ellipsis { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
+        /* Retrait de l'ellipsis CSS pour privilégier notre JS intelligent */
+        .title-text-ellipsis { white-space: nowrap; overflow: hidden; display: inline-block; }
 
         .sidebar-toggle-btn {
             background: none; border: none; padding: 6px; border-radius: 8px; cursor: pointer; color: var(--system-blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
@@ -219,11 +222,6 @@
         .edit-toggle-pill.active .icon-edit-on { display: inline-block; }
         .edit-toggle-pill.active .icon-edit-off { display: none; }
 
-        .icon-theme-light, .icon-theme-dark, .icon-theme-system { display: none; }
-        body.light-theme .icon-theme-light { display: inline-block; }
-        body.dark-theme .icon-theme-dark { display: inline-block; }
-        body.system-theme .icon-theme-system { display: inline-block; }
-
         .theme-circle-btn { padding: 0 !important; width: 34px; height: 34px; border-radius: 50% !important; flex-shrink: 0; }
 
         body.is-editing .editable-text {
@@ -233,33 +231,105 @@
         body.is-editing .editable-text:focus { outline: none; background: var(--bg-feuillet); border-bottom-color: transparent; box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.15), 0 0 0 1px var(--system-blue); }
 
         .icon-btn { 
-    background: none; 
-    border: none; 
-    cursor: pointer; 
-    opacity: 0.5; 
-    transition: opacity 0.2s; 
-    padding: 0; 
-    /* On retire la taille fixe pour laisser le SVG se comporter naturellement */
-    display: inline-flex; 
-    align-items: center; 
-    justify-content: center;
-    vertical-align: middle; /* Indispensable pour l'alignement texte/icône */
-    flex-shrink: 0;
-}
+            background: none; border: none; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; padding: 0; 
+            display: inline-flex; align-items: center; justify-content: center;
+            vertical-align: middle; flex-shrink: 0;
+        }
 
-.icon-btn svg {
-    width: 20px; /* Taille légèrement ajustée pour correspondre à ton texte */
-    height: 20px;
-    display: block;
-}
-
-.icon-btn:hover { opacity: 1; }
+        .icon-btn svg { width: 20px; height: 20px; display: block; }
+        .icon-btn:hover { opacity: 1; }
         .danger-zone { color: var(--system-red); opacity: 0.8;}
 
         .dashboard-container { padding: 30px 40px; max-width: 950px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 30px; }
         
-        .chart-container { background: var(--bg-feuillet); padding: 20px; border-radius: 16px; height: 380px; display: flex; justify-content: center; align-items: center; border: 1px solid var(--separator); box-shadow: 0 4px 6px rgba(0,0,0,0.01); transition: background-color 0.3s ease, border-color 0.3s ease;}
+        .chart-container { 
+            position: relative;
+            background: var(--bg-feuillet); 
+            padding: 55px 20px 20px 20px; 
+            border-radius: 16px; 
+            height: 400px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            border: 1px solid var(--separator); 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.01); 
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
         .chart-container canvas { max-width: 100%; max-height: 100%; }
+
+        /* --- ANIMATION ILLUSION OPTIQUE iOS POUR LE TOGGLE GRAPHIQUE --- */
+        .custom-apple-toggle {
+            position: absolute;
+            top: 12px;
+            right: 15px;
+            width: 56px;
+            height: 32px;
+            border-radius: 32px;
+            background-color: #F2F2F7;
+            border: 1px solid var(--separator);
+            cursor: pointer;
+            outline: none;
+            padding: 2px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            z-index: 10; 
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+        }
+        body.dark-theme .custom-apple-toggle {
+            background-color: #1C1C1E; 
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+        @media (prefers-color-scheme: dark) {
+            body.system-theme .custom-apple-toggle {
+                background-color: #1C1C1E;
+                border-color: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        .custom-apple-toggle .toggle-thumb {
+            position: relative; /* Indispensable pour centrer les icônes absolues */
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background-color: #FFFFFF;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 0 1px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            color: var(--system-blue); 
+        }
+        body.dark-theme .custom-apple-toggle .toggle-thumb {
+            background-color: #3A3A3C;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+            color: var(--system-blue);
+        }
+        @media (prefers-color-scheme: dark) {
+            body.system-theme .custom-apple-toggle .toggle-thumb {
+                background-color: #3A3A3C;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+                color: var(--system-blue);
+            }
+        }
+
+        .custom-apple-toggle.bar-mode .toggle-thumb { transform: translateX(24px); }
+        
+        /* Les deux icônes se superposent et s'animent fluidement */
+        .custom-apple-toggle .toggle-thumb svg {
+            position: absolute;
+            top: 50%; left: 50%;
+            margin-top: -7px; margin-left: -7px; /* Centrage exact pour un SVG de 14x14 */
+            transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        /* État normal (Radar visible) */
+        .custom-apple-toggle:not(.bar-mode) .icon-radar { opacity: 1; transform: scale(1) rotate(0deg); }
+        .custom-apple-toggle:not(.bar-mode) .icon-bar { opacity: 0; transform: scale(0.3) rotate(-45deg); pointer-events: none;}
+        
+        /* État Bar mode (Barres visibles) */
+        .custom-apple-toggle.bar-mode .icon-radar { opacity: 0; transform: scale(0.3) rotate(45deg); pointer-events: none;}
+        .custom-apple-toggle.bar-mode .icon-bar { opacity: 1; transform: scale(1) rotate(0deg); }
 
         .welcome-card { background: linear-gradient(135deg, rgba(0, 122, 255, 0.06), rgba(175, 82, 222, 0.06)); border: 1px solid var(--separator); padding: 24px; border-radius: 16px;}
         .welcome-card h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
@@ -342,7 +412,7 @@
         body.is-editing .edit-only-block { display: block !important; }
 
         .modal-backdrop {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.3);
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; background: rgba(0, 0, 0, 0.3);
             display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: all 0.25s ease-out;
         }
         .modal-backdrop.show { opacity: 1; pointer-events: auto; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
@@ -369,7 +439,7 @@
             .badge-large { font-size: 14px; padding: 4px 10px; }
             
             .sidebar { 
-                position: fixed; top: 0; left: 0; height: 100vh; max-height: 100vh;
+                position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh; max-height: 100dvh;
                 z-index: 100; box-shadow: 4px 0 15px rgba(0,0,0,0.1);
                 transform: translateX(0); width: 280px !important; opacity: 1 !important;
             }
@@ -382,7 +452,7 @@
 
             .main-content { width: 100vw; }
             .dashboard-container { padding: 15px; gap: 20px; }
-            .chart-container { height: 280px !important; }
+            .chart-container { height: 320px !important; padding: 50px 15px 15px 15px !important; }
             .subject-title-area { flex-wrap: wrap; }
             .apple-input { font-size: 16px; }
         }
@@ -394,7 +464,6 @@
             .topbar h1 { font-size: 18px; }
             .topbar-actions { gap: 6px; }
             
-            /* Pastilles circulaires parfaites avec centrage flex */
             .ios-pill-btn { 
                 padding: 0; 
                 width: 36px; 
@@ -405,7 +474,6 @@
                 align-items: center; 
             }
             
-            /* Cacher TOUS les textes dans les pastilles, afficher uniquement les SVG au centre */
             .ios-pill-btn span.btn-text { display: none; }
             .ios-pill-btn svg { margin: 0; display: block; }
 
@@ -413,13 +481,8 @@
             .add-note-form { flex-direction: column; align-items: flex-start; }
             .apple-input { width: 100%; }
 
-            /* Miniaturisation intelligente du Badge Moyen pour ne pas pousser les boutons */
             .title-badge { font-size: 13px; padding: 4px 8px; margin-left: auto; }
-            .moy-text { display: none; } /* Enlève le mot "Moyenne :" pour sauver un espace colossal */
-        }
-
-        @media (max-width: 768px) and (orientation: portrait) {
-            .title-text-ellipsis { display: none !important; }
+            .moy-text { display: none; } 
         }
     </style>
 </head>
@@ -453,7 +516,6 @@
             
             <div class="topbar-actions">
                 <button id="sim-toggle-btn" class="ios-pill-btn sim-toggle-pill" onclick="toggleGlobalSimulationBtn()">
-                    <!-- Icône Simulation Originale -->
                     <svg class="icon-sim-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                         <circle cx="12" cy="12" r="3"></circle>
@@ -466,11 +528,9 @@
                 </button>
                 
                 <button id="btn-edit-mode" class="ios-pill-btn edit-toggle-pill" onclick="toggleEditMode()">
-                    <!-- Icône Crayon (Modifier) -->
                     <svg class="icon-edit-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
                     </svg>
-                    <!-- Icône Check (Terminer) -->
                     <svg class="icon-edit-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
@@ -478,11 +538,8 @@
                 </button>
 
                 <button id="theme-toggle-btn" class="ios-pill-btn sim-toggle-pill theme-circle-btn" onclick="cycleTheme()" aria-label="Changer de thème">
-    <!-- Cette icône change dynamiquement via JS -->
-    <svg id="theme-icon-active" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <!-- Le contenu sera injecté par le script -->
-    </svg>
-</button>
+                    <svg id="theme-icon-active" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></svg>
+                </button>
             </div>
         </div>
         
@@ -498,7 +555,6 @@
     </div>
 
     <script>
-        // L'icône de suppression (Poubelle SVG pure)
         const svgTrash = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
         // === DEBUT CONFIGURATION FIREBASE ===
@@ -548,6 +604,29 @@
         let openYears = { "Année 1": true }; let openSubjects = new Set(); 
         
         let currentThemeState = localStorage.getItem('apple_notes_theme_v5') || 'system';
+        let currentChartMode = 'radar'; // 'radar' ou 'bar'
+
+        // === FONCTION D'ABRÉVIATION INTELLIGENTE ===
+        function getShortName(str) {
+            return str.replace(/Année\s*/gi, 'A').replace(/Semestre\s*/gi, 'S');
+        }
+
+        // Calcule si le titre déborde et l'abrège si nécessaire
+        function adjustTitleSize() {
+            const titleSpan = document.getElementById('dynamic-page-title');
+            if (!titleSpan || isEditMode) return; // Jamais abréger en mode édition pour ne pas gêner la frappe
+            
+            const fullText = titleSpan.getAttribute('data-fulltext');
+            if (!fullText) return;
+
+            // Remettre le texte complet temporairement pour mesurer sa vraie taille
+            titleSpan.innerText = fullText;
+            
+            // Si la largeur requise (scrollWidth) est supérieure à la largeur dispo (clientWidth) (+ petite marge de sécurité)
+            if (titleSpan.scrollWidth > titleSpan.clientWidth + 2) {
+                titleSpan.innerText = getShortName(fullText);
+            }
+        }
 
         function checkDataConsistency() {
             if (!db || !db.years) { db = JSON.parse(JSON.stringify(defaultData)); }
@@ -572,7 +651,7 @@
             return true;
         }
 
-       function save(skipHistory = false) { 
+        function save(skipHistory = false) { 
             localStorage.setItem('apple_notes_db_v6', JSON.stringify(db)); 
             if(!skipHistory) pushHistory(); 
             
@@ -597,39 +676,30 @@
             if (window.innerWidth <= 1024) { document.body.classList.add('sidebar-hidden'); }
         }
 
+        const themeIcons = {
+            system: `<circle cx="12" cy="12" r="9"></circle><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"></path>`,
+            light: `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.22" x2="5.64" y2="17.78"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`,
+            dark: `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`
+        };
+
         function applyTheme() {
             document.body.classList.remove('light-theme', 'dark-theme', 'system-theme');
             document.body.classList.add(currentThemeState + '-theme');
+            
+            const iconContainer = document.getElementById('theme-icon-active');
+            if(iconContainer) { iconContainer.innerHTML = themeIcons[currentThemeState]; }
+            
             if (globalChart) renderMainContent();
         }
 
-        // Définition des icônes SVG pour le bouton unique
-const themeIcons = {
-    system: `<circle cx="12" cy="12" r="9"></circle><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"></path>`,
-    light: `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.22" x2="5.64" y2="17.78"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`,
-    dark: `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`
-};
-
-function applyTheme() {
-    document.body.classList.remove('light-theme', 'dark-theme', 'system-theme');
-    document.body.classList.add(currentThemeState + '-theme');
-    
-    // Mise à jour de l'icône dans le bouton unique
-    const iconContainer = document.getElementById('theme-icon-active');
-    if(iconContainer) {
-        iconContainer.innerHTML = themeIcons[currentThemeState];
-    }
-    
-    if (globalChart) renderMainContent();
-}
-
-function cycleTheme() {
-    const states = ['system', 'light', 'dark'];
-    const idx = states.indexOf(currentThemeState);
-    currentThemeState = states[(idx + 1) % 3];
-    localStorage.setItem('apple_notes_theme_v5', currentThemeState);
-    applyTheme();
-}
+        function cycleTheme() {
+            const states = ['system', 'light', 'dark'];
+            const idx = states.indexOf(currentThemeState);
+            currentThemeState = states[(idx + 1) % 3];
+            localStorage.setItem('apple_notes_theme_v5', currentThemeState);
+            applyTheme();
+        }
+        
         function isEffectivelyDark() {
             if (currentThemeState === 'dark') return true;
             if (currentThemeState === 'light') return false;
@@ -659,6 +729,23 @@ function cycleTheme() {
             const btn = document.getElementById('sim-toggle-btn');
             if (includeSimulations) btn.classList.add('active'); else btn.classList.remove('active');
             renderMainContent();
+        }
+
+        let chartToggleTimeout;
+        function toggleChartType(btn) {
+            if (btn && btn.disabled) return;
+            if (btn) btn.disabled = true; 
+
+            if (btn) {
+                btn.classList.toggle('bar-mode');
+            }
+            
+            currentChartMode = currentChartMode === 'radar' ? 'bar' : 'radar';
+            
+            clearTimeout(chartToggleTimeout);
+            chartToggleTimeout = setTimeout(() => {
+                renderMainContent();
+            }, 300);
         }
 
         function showCustomConfirm(title, message, onConfirm, isDestructive = false) {
@@ -812,6 +899,22 @@ function cycleTheme() {
             vInput.value = ''; cInput.value = ''; document.getElementById(`s-${id}`).checked = false;
             openSubjects.add(sIdx.toString()); save(); renderMainContent();
         }
+        
+        function deleteNote(sIdx, subIdx, nIdx) {
+            if(!checkEditGuard()) return;
+            showCustomConfirm("Supprimer la note", "Voulez-vous supprimer définitivement cette note ?", () => {
+                let target = db.years[currentYear][currentPage][sIdx];
+                if (subIdx !== null) {
+                    target.subSubjects[subIdx].notes.splice(nIdx, 1);
+                } else {
+                    target.notes.splice(nIdx, 1);
+                }
+                openSubjects.add(sIdx.toString()); 
+                save(); 
+                renderMainContent(); 
+            }, true);
+        }
+
         function submitSubject() {
             if(!checkEditGuard()) return;
             const nameInput = document.getElementById('add-sub-name'); const coefInput = document.getElementById('add-sub-coef');
@@ -875,11 +978,28 @@ function cycleTheme() {
             
             simToggle.style.display = activeView === 'accueil' ? 'none' : 'inline-flex';
 
+            let chartToggleHtml = `
+                <button class="custom-apple-toggle ${currentChartMode === 'bar' ? 'bar-mode' : ''}" onclick="toggleChartType(this)">
+                    <div class="toggle-thumb">
+                        <svg class="icon-radar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <svg class="icon-bar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="20" x2="18" y2="10"></line>
+                            <line x1="12" y1="20" x2="12" y2="4"></line>
+                            <line x1="6" y1="20" x2="6" y2="14"></line>
+                        </svg>
+                    </div>
+                </button>
+            `;
+
             if (activeView === 'page') {
                 const pageAvg = calcPageAvg(db.years[currentYear][currentPage]);
                 
+                // Utilisation du span dynamic-page-title pour notre script d'abréviation intelligente
                 title.innerHTML = `
-                    <span class="${isEditMode ? 'editable-text' : ''} title-text-ellipsis" contenteditable="${isEditMode}" onblur="updatePageName('${currentPage}', this)" onkeydown="handleEditableKeydown(event, this)">${currentPage}</span>
+                    <span id="dynamic-page-title" class="${isEditMode ? 'editable-text' : ''} title-text-ellipsis" contenteditable="${isEditMode}" data-fulltext="${currentPage}" onblur="updatePageName('${currentPage}', this)" onkeydown="handleEditableKeydown(event, this)">${currentPage}</span>
                     <button class="icon-btn danger-zone edit-only" style="flex-shrink: 0;" onclick="deletePage()">${svgTrash}</button>
                     <div class="badge badge-large ${getBadgeClass(pageAvg)} title-badge" style="margin-left: auto;"><span class="moy-text">Moyenne : </span>${formatVal(pageAvg)}</div>
                 `;
@@ -887,7 +1007,11 @@ function cycleTheme() {
                 const pageData = db.years[currentYear][currentPage] || [];
                 let labels = [], dataVals = [];
                 
-                let viewHtml = `<div class="chart-container" style="margin-bottom: 30px;"><canvas id="mainChart"></canvas></div>`;
+                let viewHtml = `
+                    <div class="chart-container" style="margin-bottom: 30px;">
+                        ${chartToggleHtml}
+                        <canvas id="mainChart"></canvas>
+                    </div>`;
                 viewHtml += `<div class="list-container">`;
 
                 pageData.forEach((subject, sIdx) => {
@@ -932,10 +1056,21 @@ function cycleTheme() {
 
                 viewHtml += `</div><div class="edit-only-block">${buildAddSubjectForm()}</div>`;
                 content.innerHTML = viewHtml;
-                renderRadar(labels, [{ label: currentPage, data: dataVals, borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.05)' }]);
+
+                const datasetOptions = [{ 
+                    label: currentPage, 
+                    data: dataVals, 
+                    borderColor: '#007AFF', 
+                    backgroundColor: currentChartMode === 'bar' ? '#007AFF' : 'rgba(0, 122, 255, 0.05)',
+                    borderRadius: currentChartMode === 'bar' ? 8 : 0
+                }];
+                if (currentChartMode === 'radar') renderRadar(labels, datasetOptions);
+                else renderBarChart(labels, datasetOptions);
 
             } else if (activeView === 'bilan_annuel') {
-                title.textContent = `Bilan Annuel ${currentYear}`;
+                const titleStr = `Bilan Annuel ${currentYear}`;
+                title.innerHTML = `<span id="dynamic-page-title" class="title-text-ellipsis" data-fulltext="${titleStr}">${titleStr}</span>`;
+                
                 let labels = [], datasets = [];
                 let viewHtml = `<div class="bilan-grid">`;
                 const yAvg = calcYearAvg(currentYear);
@@ -948,7 +1083,11 @@ function cycleTheme() {
                         db.years[currentYear][pName].forEach(sub => { if (!labels.includes(sub.name)) labels.push(sub.name); });
                     }
                 }
-                viewHtml += `</div><div class="chart-container"><canvas id="mainChart"></canvas></div>`;
+                viewHtml += `</div>
+                    <div class="chart-container">
+                        ${chartToggleHtml}
+                        <canvas id="mainChart"></canvas>
+                    </div>`;
                 content.innerHTML = viewHtml;
 
                 const colors = ['#007AFF', '#34C759', '#FF9500', '#AF52DE']; let idx = 0;
@@ -960,14 +1099,22 @@ function cycleTheme() {
                             let parsedAvg = found ? calcSubjectAvg(found) : 0;
                             d.push(parsedAvg !== null ? parseFloat(parsedAvg.toFixed(2)) : 0); 
                         });
-                        datasets.push({ label: pName, data: d, borderColor: colors[idx%colors.length], backgroundColor: 'transparent' }); 
+                        datasets.push({ 
+                            label: pName, 
+                            data: d, 
+                            borderColor: colors[idx%colors.length], 
+                            backgroundColor: currentChartMode === 'bar' ? colors[idx%colors.length] : 'transparent',
+                            borderRadius: currentChartMode === 'bar' ? 8 : 0
+                        }); 
                         idx++;
                     }
                 }
-                renderRadar(labels, datasets);
+
+                if (currentChartMode === 'radar') renderRadar(labels, datasets);
+                else renderBarChart(labels, datasets);
 
             } else if (activeView === 'accueil') {
-                title.textContent = "Accueil";
+                title.innerHTML = `<span id="dynamic-page-title" class="title-text-ellipsis" data-fulltext="Accueil">Accueil</span>`;
                 let labels = [], dataVals = [];
                 
                 let viewHtml = `
@@ -994,11 +1141,28 @@ function cycleTheme() {
                 gridHtml += cardsHtml; gridHtml += `</div>`;
                 
                 viewHtml += gridHtml;
-                viewHtml += `<div class="chart-container" style="height:340px;"><canvas id="mainChart"></canvas></div>`;
+                viewHtml += `
+                    <div class="chart-container" style="height:340px;">
+                        ${chartToggleHtml}
+                        <canvas id="mainChart"></canvas>
+                    </div>`;
                 
                 content.innerHTML = viewHtml;
-                renderBarChart(labels, dataVals);
+
+                const datasetOptions = [{ 
+                    label: 'Moyenne', 
+                    data: dataVals, 
+                    borderColor: '#007AFF',
+                    backgroundColor: currentChartMode === 'bar' ? '#007AFF' : 'rgba(0, 122, 255, 0.05)', 
+                    borderRadius: currentChartMode === 'bar' ? 8 : 0 
+                }];
+
+                if (currentChartMode === 'radar') renderRadar(labels, datasetOptions);
+                else renderBarChart(labels, datasetOptions);
             }
+
+            // Exécute la vérification d'abréviation une fois que le texte est injecté dans le DOM
+            setTimeout(adjustTitleSize, 10);
         }
 
         function toggleSubject(sIdx) { const body = document.getElementById(`body-${sIdx}`); if(body.classList.contains('active')) { body.classList.remove('active'); openSubjects.delete(sIdx.toString()); } else { body.classList.add('active'); openSubjects.add(sIdx.toString()); } }
@@ -1028,8 +1192,8 @@ function cycleTheme() {
             const id = `f-${sIdx}-${subIdx}`;
             return `
                 <div class="add-note-form edit-only-flex">
-                    <input class="apple-input" type="number" id="v-${id}" placeholder="Note" step="0.01" min="0" max="20" onkeydown="if(event.key==='Enter') submitNote('${sIdx}', ${subIdx}, '${id}')">
-                    <input class="apple-input" type="number" id="c-${id}" placeholder="Coef" step="0.01" min="0" onkeydown="if(event.key==='Enter') submitNote('${sIdx}', ${subIdx}, '${id}')">
+                    <input class="apple-input" type="number" id="v-${id}" placeholder="Note" step="1" min="0" max="20" onkeydown="if(event.key==='Enter') submitNote('${sIdx}', ${subIdx}, '${id}')">
+                    <input class="apple-input" type="number" id="c-${id}" placeholder="Coef" step="1" min="0" onkeydown="if(event.key==='Enter') submitNote('${sIdx}', ${subIdx}, '${id}')">
                     <label class="checkbox-label"><input type="checkbox" id="s-${id}"> Simulation</label>
                     <button class="btn-action" onclick="submitNote('${sIdx}', ${subIdx}, '${id}')">Ajouter</button>
                 </div>`;
@@ -1041,7 +1205,7 @@ function cycleTheme() {
                     <h3 style="font-size:17px; margin:0; letter-spacing:-0.3px;">Nouvelle Matière</h3>
                     <div class="form-row">
                         <input class="apple-input" type="text" id="add-sub-name" placeholder="Nom de la matière" style="flex:1; min-width:150px;">
-                        <input class="apple-input" type="number" id="add-sub-coef" placeholder="Coef" step="0.1" style="width:80px;">
+                        <input class="apple-input" type="number" id="add-sub-coef" placeholder="Coef" step="1" style="width:80px;">
                         <label class="checkbox-label"><input type="checkbox" id="add-sub-isnest"> Sous-matières</label>
                         <button class="btn-action" onclick="submitSubject()">Créer</button>
                     </div>
@@ -1070,17 +1234,20 @@ function cycleTheme() {
             }); 
         }
 
-        function renderBarChart(labels, data) { 
+        function renderBarChart(labels, datasets) { 
             const ctx = document.getElementById('mainChart').getContext('2d'); if (globalChart) globalChart.destroy(); 
             const isDark = isEffectivelyDark();
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
             const labelColor = isDark ? '#AEAEB2' : '#1C1C1E';
             globalChart = new Chart(ctx, { 
-                type: 'bar', data: { labels, datasets: [{ label: 'Moyenne', data, backgroundColor: '#007AFF', borderRadius: 8 }] }, 
+                type: 'bar', data: { labels, datasets }, 
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    scales: { x: { ticks: { color: labelColor }, grid: { display: false } }, y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: gridColor } } }, 
-                    plugins: { legend: { display: false } } 
+                    scales: { 
+                        x: { ticks: { color: labelColor }, grid: { display: false } }, 
+                        y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: gridColor } } 
+                    }, 
+                    plugins: { legend: { display: datasets.length > 1, labels: { color: labelColor } } } 
                 } 
             }); 
         }
@@ -1091,12 +1258,16 @@ function cycleTheme() {
             } else {
                 document.body.classList.remove('sidebar-hidden');
             }
+            adjustTitleSize(); // Exécute notre script d'abréviation lors des redimensionnements
         }
 
         let resizeTimer;
         window.addEventListener('resize', () => {
             clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(handleResize, 100);
+            resizeTimer = setTimeout(() => {
+                handleResize();
+                renderMainContent(); 
+            }, 100);
         });
 
         function init() {
