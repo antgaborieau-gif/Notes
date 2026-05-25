@@ -777,8 +777,58 @@
         document.addEventListener('keydown', (e) => {
             const activeElem = document.activeElement;
             const isTyping = activeElem && (activeElem.tagName === 'INPUT' || activeElem.getAttribute('contenteditable') === 'true');
+            const modal = document.getElementById('custom-modal');
+            const isModalOpen = modal.classList.contains('show');
+
+            // --- 1. Gestion des modales (Fenêtres de confirmation/alerte) ---
+            if (isModalOpen) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const confirmBtn = document.getElementById('modal-confirm-btn');
+                    // S'il y a un bouton de confirmation (Confirm), on clique dessus. Sinon on ferme (Alert).
+                    if (confirmBtn) confirmBtn.click();
+                    else closeCustomModal();
+                    return;
+                }
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    closeCustomModal();
+                    return;
+                }
+            }
+
+            // --- 2. Gestion de la touche Echap globale ---
+            if (e.key === 'Escape') {
+                if (isTyping) activeElem.blur(); // Quitte le champ de texte
+                return;
+            }
+
+            // --- 3. Raccourcis globaux (Uniquement si on ne tape pas de texte) ---
+            if (!isTyping && !isModalOpen) {
+                const key = e.key.toLowerCase();
+                
+                if (key === 'e') {
+                    e.preventDefault();
+                    toggleEditMode();
+                }
+                if (key === 's') {
+                    e.preventDefault();
+                    // On ne peut activer les simulations que si on n'est pas sur la page d'accueil
+                    if (activeView !== 'accueil') toggleGlobalSimulationBtn();
+                }
+                if (key === 'm') {
+                    e.preventDefault();
+                    toggleSidebar();
+                }
+                if (key === 't') {
+                    e.preventDefault();
+                    cycleTheme();
+                }
+            }
+
+            // --- 4. Historique (Ctrl+Z / Cmd+Z) ---
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-                if (isTyping) return;
+                if (isTyping) return; // On laisse le navigateur gérer le Ctrl+Z natif du texte
                 e.preventDefault();
                 if (e.shiftKey) redo(); else undo();
             }
