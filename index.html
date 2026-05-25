@@ -8,17 +8,18 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Carnet Pro">
     <link rel="apple-touch-icon" href="logo.png">
-
     <link rel="icon" type="image/x-icon" href="logoICAM3.ico">
     
     <title>Mon Carnet de Notes</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
     <style>
         /* === VARIABLES THEME CLAIR === */
         :root, body.light-theme, body.system-theme {
-            color-scheme: light; /* Force les inputs natifs en mode clair */
+            color-scheme: light;
             --system-blue: #007AFF;
             --system-green: #34C759;
             --system-orange: #FF9500;
@@ -26,7 +27,6 @@
             --system-purple: #AF52DE;
             --system-gray: #8E8E93;
             --system-gray6: #F2F2F7;
-
             --bg-cahier: var(--system-gray6);
             --bg-feuillet: #FFFFFF;
             --bg-input: #FFFFFF;
@@ -35,7 +35,6 @@
             --txt-secondaire: #8E8E93;
             --separator: rgba(0,0,0,0.08);
             --color-grid: rgba(0, 122, 255, 0.04);
-            
             --bg-reliure-strip: #F7F7F7;
             --color-reliure-line: #DBDBDB;
             --bg-card-hover: #FAFAFA;
@@ -47,7 +46,7 @@
 
         /* === VARIABLES THEME SOMBRE === */
         body.dark-theme {
-            color-scheme: dark; /* Force les inputs natifs en mode sombre */
+            color-scheme: dark;
             --system-blue: #0A84FF;
             --system-green: #30D158;
             --system-orange: #FF9F0A;
@@ -55,7 +54,6 @@
             --system-purple: #BF5AF2;
             --system-gray: #98989D;
             --system-gray6: #1C1C1E;
-
             --bg-cahier: #000000;
             --bg-feuillet: #1C1C1E;
             --bg-input: #2C2C2E;
@@ -64,7 +62,6 @@
             --txt-secondaire: #AEAEB2;
             --separator: rgba(255, 255, 255, 0.12);
             --color-grid: rgba(10, 132, 255, 0.05);
-            
             --bg-reliure-strip: #252528;
             --color-reliure-line: #3A3A3C;
             --bg-card-hover: #262629;
@@ -74,7 +71,6 @@
             --bg-hover: rgba(255, 255, 255, 0.05);
         }
 
-        /* === VARIABLES THEME AUTO === */
         @media (prefers-color-scheme: dark) {
             body.system-theme {
                 color-scheme: dark;
@@ -105,23 +101,49 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
-        body, button, a, div {
-            /* Supprime le flash de clic natif sur iOS/Android */
-            -webkit-tap-highlight-color: transparent;
-        }
+        body, button, a, div { -webkit-tap-highlight-color: transparent; }
 
         body { 
-            display: flex; 
-            height: 100vh; height: 100dvh; 
-            overflow: hidden;
+            display: flex; height: 100vh; height: 100dvh; overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; 
-            background-color: var(--bg-cahier); 
-            color: var(--txt-primaire); 
-            -webkit-font-smoothing: antialiased;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            background-color: var(--bg-cahier); color: var(--txt-primaire); 
+            -webkit-font-smoothing: antialiased; transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Overlay mobile pour le menu */
+        /* --- AUTHENTIFICATION & PARAMETRES --- */
+        .full-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
+            background: var(--bg-cahier); z-index: 9999;
+            display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.4s ease;
+        }
+        
+        .auth-card {
+            background: var(--bg-feuillet); padding: 40px 30px; border-radius: 20px; width: 90%; max-width: 380px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); border: 1px solid var(--separator);
+            text-align: center; display: flex; flex-direction: column; gap: 15px;
+        }
+        
+        .auth-card h2 { font-size: 24px; margin-bottom: 5px; letter-spacing: -0.5px; }
+        .auth-card p { color: var(--txt-secondaire); font-size: 14px; margin-bottom: 15px; }
+        
+        .auth-input {
+            width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--separator);
+            background: var(--bg-input); color: var(--txt-primaire); font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        .auth-input:focus { outline: none; border-color: var(--system-blue); }
+        
+        .auth-btn {
+            width: 100%; padding: 14px; border-radius: 12px; border: none; font-size: 16px; font-weight: 600; cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        .btn-primary { background: var(--system-blue); color: white; margin-top: 10px; }
+        .btn-secondary { background: var(--system-gray6); color: var(--system-blue); }
+        .auth-btn:hover { opacity: 0.8; }
+        
+        #error-msg { color: var(--system-red); font-size: 13px; min-height: 18px; }
+
         .sidebar-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
             background: rgba(0, 0, 0, 0.4); z-index: 90; opacity: 0;
@@ -131,18 +153,14 @@
         .sidebar { 
             width: 280px; background-color: var(--bg-feuillet); 
             display: flex; flex-direction: column; border-right: 1px solid var(--separator); z-index: 100; 
-            transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease, transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             overflow: hidden; white-space: nowrap; flex-shrink: 0;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
         }
 
-        body.sidebar-hidden .sidebar { 
-            width: 0 !important; opacity: 0 !important; pointer-events: none; 
-            border-right-color: transparent !important;
-        }
+        body.sidebar-hidden .sidebar { width: 0 !important; pointer-events: none; border-right-color: transparent !important; }
 
-        .sidebar-header { padding: 25px 20px 15px; border-bottom: 1px solid var(--separator); }
+        .sidebar-header { padding: 25px 20px 15px; border-bottom: 1px solid var(--separator); display: flex; justify-content: space-between; align-items: center;}
         .sidebar-header h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: var(--txt-primaire); }
         .sidebar-menu { flex: 1; padding: 15px 10px; overflow-y: auto; }
         
@@ -161,64 +179,45 @@
         .page-item:hover { background: var(--bg-hover); }
         .page-item.active { background: rgba(0, 122, 255, 0.08); color: var(--system-blue); font-weight: 600; }
         
-        .sidebar-btn { background: none; border: none; color: var(--system-blue); padding: 7px 12px 7px 28px; cursor: pointer; font-size: 14px; font-weight: 500; text-align: left; transition: opacity 0.2s; width: 100%;}
+        .sidebar-btn { background: none; border: none; color: var(--system-blue); padding: 7px 12px 7px 28px; cursor: pointer; font-size: 14px; font-weight: 500; text-align: left; width: 100%;}
         .sidebar-btn:hover { opacity: 0.7; }
         
         .sidebar-footer { padding: 12px; display: flex; gap: 8px; border-top: 1px solid var(--separator); background: var(--bg-feuillet); }
-        .btn-history { flex: 1; padding: 8px; background-color: var(--system-gray6); color: var(--system-blue); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.2s; }
-        .btn-history:hover { background-color: var(--separator); }
-        .btn-history:disabled { color: var(--txt-secondaire); cursor: not-allowed; opacity: 0.5;}
+        .btn-history { flex: 1; padding: 8px; background-color: var(--system-gray6); color: var(--system-blue); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; }
 
-        /* Zone de contenu principale */
         .main-content {
             flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative;
             background-image: linear-gradient(var(--color-grid) 1px, transparent 1px), linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
-            background-size: 20px 20px;
-            padding-bottom: env(safe-area-inset-bottom);
+            background-size: 20px 20px; padding-bottom: env(safe-area-inset-bottom);
         }
 
         .topbar { 
             padding: calc(15px + env(safe-area-inset-top)) 40px 15px; 
             display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; 
             background: var(--bg-topbar); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--separator); min-height: 75px;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
             gap: 20px;
         }
 
         .topbar-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 0; }
-        
-        .topbar h1 { 
-            font-size: 32px; font-weight: 700; letter-spacing: -0.8px; margin: 0; line-height: 1; 
-            display: flex; align-items: center; gap: 10px; color: var(--txt-primaire);
-            flex: 1; min-width: 0;
-            white-space: nowrap; 
-        }
-        
+        .topbar h1 { font-size: 32px; font-weight: 700; letter-spacing: -0.8px; margin: 0; flex: 1; min-width: 0; white-space: nowrap; }
         .title-text-ellipsis { white-space: nowrap; overflow: hidden; display: inline-block; }
 
         .sidebar-toggle-btn {
-            background: none; border: none; padding: 6px; border-radius: 8px; cursor: pointer; color: var(--system-blue); display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-            transition: background-color 0.2s ease, opacity 0.2s ease;
+            background: none; border: none; padding: 6px; border-radius: 8px; cursor: pointer; color: var(--system-blue);
         }
-        .sidebar-toggle-btn:hover { background-color: rgba(0, 122, 255, 0.1); }
         
         .topbar-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;}
-
         .ios-pill-btn {
-            display: inline-flex; align-items: center; justify-content: center; padding: 6px 16px; border-radius: 50px; font-size: 14px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s ease; border: none; user-select: none; gap: 6px;
+            display: inline-flex; align-items: center; justify-content: center; padding: 6px 16px; border-radius: 50px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; gap: 6px;
         }
 
-        /* --- DA Bouton Simulation (Œil / Oeil Barré) --- */
         .sim-toggle-pill { background-color: var(--system-gray6); color: var(--txt-secondaire); }
         .sim-toggle-pill.active { background-color: rgba(175, 82, 222, 0.12); color: var(--system-purple); }
-        .sim-toggle-pill:hover { opacity: 0.8; }
         .sim-toggle-pill .icon-sim-on { display: none; }
         .sim-toggle-pill .icon-sim-off { display: inline-block; }
         .sim-toggle-pill.active .icon-sim-on { display: inline-block; }
         .sim-toggle-pill.active .icon-sim-off { display: none; }
 
-        /* --- DA Bouton Modifier (Crayon / Check) --- */
         .edit-toggle-pill { background-color: rgba(0, 122, 255, 0.1); color: var(--system-blue); }
         .edit-toggle-pill.active { background-color: var(--system-blue); color: #fff; }
         .edit-toggle-pill .icon-edit-on { display: none; }
@@ -230,164 +229,82 @@
 
         body.is-editing .editable-text {
             background: rgba(0, 122, 255, 0.05); color: var(--txt-primaire); cursor: text; padding: 2px 6px; border-radius: 6px; min-width: 20px;
-            display: inline-block; transition: all 0.2s ease; border-bottom: 1px dashed rgba(0, 122, 255, 0.3); 
-        }
-        body.is-editing .editable-text:focus { outline: none; background: var(--bg-feuillet); border-bottom-color: transparent; box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.15), 0 0 0 1px var(--system-blue); }
-
-        .icon-btn { 
-            background: none; border: none; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; padding: 0; 
-            display: inline-flex; align-items: center; justify-content: center;
-            vertical-align: middle; flex-shrink: 0;
+            display: inline-block; border-bottom: 1px dashed rgba(0, 122, 255, 0.3); 
         }
 
+        .icon-btn { background: none; border: none; cursor: pointer; opacity: 0.5; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .icon-btn svg { width: 20px; height: 20px; display: block; }
-        .icon-btn:hover { opacity: 1; }
-        .danger-zone { color: var(--system-red); opacity: 0.8;}
+        .danger-zone { color: var(--system-red); }
 
         .dashboard-container { padding: 30px 40px; max-width: 950px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 30px; }
         
         .chart-container { 
-            position: relative;
-            background: var(--bg-feuillet); 
-            padding: 55px 20px 20px 20px; 
-            border-radius: 16px; 
-            height: 400px; 
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            border: 1px solid var(--separator); 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.01); 
-            transition: background-color 0.3s ease, border-color 0.3s ease;
+            position: relative; background: var(--bg-feuillet); padding: 55px 20px 20px 20px; 
+            border-radius: 16px; height: 400px; display: flex; justify-content: center; align-items: center; 
+            border: 1px solid var(--separator); box-shadow: 0 4px 6px rgba(0,0,0,0.01);
         }
         .chart-container canvas { max-width: 100%; max-height: 100%; }
 
-        /* --- CUSTOM APPLE TOGGLE SWITCH (GRAPHIQUES) --- */
         .custom-apple-toggle {
-            position: absolute;
-            top: 12px;
-            right: 15px;
-            width: 56px;
-            height: 32px;
-            border-radius: 32px;
-            background-color: #F2F2F7;
-            border: 1px solid var(--separator);
-            cursor: pointer;
-            outline: none;
-            padding: 2px;
-            display: flex;
-            align-items: center;
-            transition: background-color 0.3s ease, border-color 0.3s ease;
-            z-index: 10; 
-            box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+            position: absolute; top: 12px; right: 15px; width: 56px; height: 32px; border-radius: 32px;
+            background-color: #F2F2F7; border: 1px solid var(--separator); cursor: pointer; padding: 2px;
+            display: flex; align-items: center; z-index: 10; box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
         }
-        body.dark-theme .custom-apple-toggle {
-            background-color: #1C1C1E; 
-            border-color: rgba(255, 255, 255, 0.05);
-        }
-        @media (prefers-color-scheme: dark) {
-            body.system-theme .custom-apple-toggle {
-                background-color: #1C1C1E;
-                border-color: rgba(255, 255, 255, 0.05);
-            }
-        }
+        body.dark-theme .custom-apple-toggle { background-color: #1C1C1E; border-color: rgba(255, 255, 255, 0.05); }
 
         .custom-apple-toggle .toggle-thumb {
-            position: relative; 
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            background-color: #FFFFFF;
+            position: relative; width: 26px; height: 26px; border-radius: 50%; background-color: #FFFFFF;
             box-shadow: 0 2px 4px rgba(0,0,0,0.15), 0 0 1px rgba(0,0,0,0.1);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            color: var(--system-blue); 
+            display: flex; justify-content: center; align-items: center;
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); color: var(--system-blue); 
         }
-        body.dark-theme .custom-apple-toggle .toggle-thumb {
-            background-color: #3A3A3C;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-            color: var(--system-blue);
-        }
-        @media (prefers-color-scheme: dark) {
-            body.system-theme .custom-apple-toggle .toggle-thumb {
-                background-color: #3A3A3C;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.4);
-                color: var(--system-blue);
-            }
-        }
+        body.dark-theme .custom-apple-toggle .toggle-thumb { background-color: #3A3A3C; color: var(--system-blue); }
 
         .custom-apple-toggle.bar-mode .toggle-thumb { transform: translateX(24px); }
         
         .custom-apple-toggle .toggle-thumb svg {
-            position: absolute;
-            top: 50%; left: 50%;
-            margin-top: -7px; margin-left: -7px; 
+            position: absolute; top: 50%; left: 50%; margin-top: -7px; margin-left: -7px; 
             transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         .custom-apple-toggle:not(.bar-mode) .icon-radar { opacity: 1; transform: scale(1) rotate(0deg); }
         .custom-apple-toggle:not(.bar-mode) .icon-bar { opacity: 0; transform: scale(0.3) rotate(-45deg); pointer-events: none;}
-        
         .custom-apple-toggle.bar-mode .icon-radar { opacity: 0; transform: scale(0.3) rotate(45deg); pointer-events: none;}
         .custom-apple-toggle.bar-mode .icon-bar { opacity: 1; transform: scale(1) rotate(0deg); }
 
-        .welcome-card { background: linear-gradient(135deg, rgba(0, 122, 255, 0.06), rgba(175, 82, 222, 0.06)); border: 1px solid var(--separator); padding: 24px; border-radius: 16px;}
-        .welcome-card h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
-        .welcome-card p { font-size: 14px; color: var(--txt-secondaire); }
-
         .list-container { display: flex; flex-direction: column; gap: 20px; }
         .list-card { background: var(--bg-feuillet); border-radius: 16px; overflow: hidden; border: 1px solid var(--separator); position: relative; padding-left: 20px;}
-        .list-card::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 20px; height: 100%; background-color: var(--bg-reliure-strip); border-right: 1px solid var(--border-reliure);
-            background-image: repeating-linear-gradient(0deg, var(--color-reliure-line) 0px, var(--color-reliure-line) 1px, transparent 1px, transparent 15px);
-        }
-        
-        .list-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
-        .list-header:hover { background-color: var(--bg-card-hover); }
+        .list-card::before { content: ''; position: absolute; top: 0; left: 0; width: 20px; height: 100%; background-color: var(--bg-reliure-strip); border-right: 1px solid var(--border-reliure); background-image: repeating-linear-gradient(0deg, var(--color-reliure-line) 0px, var(--color-reliure-line) 1px, transparent 1px, transparent 15px); }
+        .list-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
         .subject-title-area { display: flex; align-items: center; gap: 10px; }
-        .list-header h3 { font-size: 18px; font-weight: 700; margin: 0; letter-spacing: -0.3px; color: var(--txt-primaire);}
+        .list-header h3 { font-size: 18px; font-weight: 700; margin: 0;}
         .list-header small { color: var(--txt-secondaire); font-size: 14px;}
         .list-body { display: none; }
         .list-body.active { display: block; }
-        
         .appreciation-box { padding: 12px 20px; font-style: italic; color: var(--txt-secondaire); font-size: 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--separator); border-bottom: 1px solid var(--separator);}
-        .appreciation-box strong { color: var(--txt-primaire); font-weight: 600; font-style: normal; margin-right: 5px;}
-
         .sub-subject { border-top: 1px solid var(--separator); }
-        .sub-subject-header { padding: 12px 20px; font-weight: 600; font-size: 15px; color: var(--txt-primaire); display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sub-subject);}
-
+        .sub-subject-header { padding: 12px 20px; font-weight: 600; font-size: 15px; display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sub-subject);}
         .notes-area { background: var(--bg-feuillet); }
-        .note-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.03); opacity: 1; }
+        .note-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.03); }
         .note-item:last-child { border-bottom: none; }
         .note-value { font-weight: 700; font-size: 17px; }
-        
-        .sim-badge { font-size: 10px; padding: 4px 10px; border-radius: 50px; margin-left: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; vertical-align: middle;}
+        .sim-badge { font-size: 10px; padding: 4px 10px; border-radius: 50px; margin-left: 8px; font-weight: 700; text-transform: uppercase; }
         .sim-badge.active { background-color: rgba(175, 82, 222, 0.15); color: var(--system-purple); border: 1px solid rgba(175, 82, 222, 0.2); }
-        body.is-editing .sim-badge { cursor: pointer; }
-        body.is-editing .sim-badge.sim-off { background-color: transparent; border: 1px solid var(--border-reliure); color: var(--txt-secondaire); }
-
+        body.is-editing .sim-badge.sim-off { border: 1px solid var(--border-reliure); color: var(--txt-secondaire); }
         .add-note-form { padding: 12px 20px; background-color: var(--bg-sub-subject); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; border-top: 1px solid var(--separator);}
-        
-        .apple-input { padding: 8px 12px; border: 1px solid var(--separator); border-radius: 8px; font-size: 14px; background: var(--bg-input); color: var(--txt-primaire); transition: border-color 0.2s;}
-        .apple-input:focus { outline: none; border-color: var(--system-blue); }
-        .add-note-form input[type="number"] { width: 80px; }
+        .apple-input { padding: 8px 12px; border: 1px solid var(--separator); border-radius: 8px; font-size: 14px; background: var(--bg-input); color: var(--txt-primaire); }
         .checkbox-label { display: flex; align-items: center; gap: 6px; font-size: 14px; color: var(--txt-secondaire); cursor: pointer; }
-        
-        .btn-action { background-color: var(--bg-input); color: var(--system-blue); border: 1px solid var(--separator); border-radius: 50px; padding: 6px 14px; cursor: pointer; font-weight: 600; font-size: 13px; transition: all 0.2s; }
-        .btn-action:hover { background-color: var(--bg-hover); }
-
+        .btn-action { background-color: var(--bg-input); color: var(--system-blue); border: 1px solid var(--separator); border-radius: 50px; padding: 6px 14px; font-weight: 600; font-size: 13px;}
         .main-form-box { background: var(--bg-feuillet); padding: 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 15px; margin-top: 10px; border: 1px solid var(--separator);}
         .form-row { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
 
         .bilan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .stat-card { background: var(--bg-feuillet); padding: 20px; border-radius: 16px; text-align: center; border: 1px solid var(--separator);}
         .stat-card.featured { background: var(--system-blue); color: white; border: none;}
-        .stat-card.featured h4 { color: rgba(255,255,255,0.8); }
         .stat-card h4 { color: var(--txt-secondaire); font-size: 13px; margin-bottom: 6px; text-transform: uppercase; font-weight: 600;}
         .stat-card p { font-size: 32px; font-weight: 700; letter-spacing: -1px; }
 
-        .badge { font-weight: 700; padding: 4px 10px; border-radius: 12px; min-width: 55px; text-align: center; font-size: 14px; white-space: nowrap; flex-shrink: 0; }
+        .badge { font-weight: 700; padding: 4px 10px; border-radius: 12px; min-width: 55px; text-align: center; font-size: 14px; }
         .badge-large { font-size: 16px; padding: 6px 14px; }
         
         .bg-good { background-color: rgba(52, 199, 89, 0.08); color: #2e7d32; } 
@@ -396,16 +313,7 @@
         body.dark-theme .bg-medium { color: #FF9F0A; background-color: rgba(255, 159, 10, 0.15); }
         .bg-bad { background-color: rgba(255, 59, 48, 0.08); color: #c62828; }
         body.dark-theme .bg-bad { color: #FF453A; background-color: rgba(255, 69, 58, 0.15); }
-        
-        @media (prefers-color-scheme: dark) {
-            body.system-theme .bg-good { color: #30D158; background-color: rgba(48, 209, 88, 0.15); }
-            body.system-theme .bg-medium { color: #FF9F0A; background-color: rgba(255, 159, 10, 0.15); }
-            body.system-theme .bg-bad { color: #FF453A; background-color: rgba(255, 69, 58, 0.15); }
-        }
-        
-        .text-good { color: var(--system-green); } 
-        .text-medium { color: var(--system-orange); } 
-        .text-bad { color: var(--system-red); }
+        .text-good { color: var(--system-green); } .text-medium { color: var(--system-orange); } .text-bad { color: var(--system-red); }
 
         .edit-only, .edit-only-flex, .edit-only-block { display: none !important; }
         body.is-editing .edit-only { display: inline-block !important; }
@@ -413,75 +321,54 @@
         body.is-editing .edit-only-block { display: block !important; }
 
         .modal-backdrop {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh; background: rgba(0, 0, 0, 0.3);
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0, 0, 0, 0.3);
             display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: all 0.25s ease-out;
         }
         .modal-backdrop.show { opacity: 1; pointer-events: auto; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); }
         .modal-card {
-            background: var(--bg-modal); backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); width: 275px; padding: 20px 16px 0 16px; border-radius: 14px; text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.15); transform: scale(1.15); transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.25, 1);
+            background: var(--bg-modal); width: 290px; padding: 20px 16px 0 16px; border-radius: 14px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); transform: scale(1.15); transition: transform 0.2s cubic-bezier(0.1, 0.8, 0.25, 1);
         }
         .modal-backdrop.show .modal-card { transform: scale(1); }
         .modal-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 5px; color: var(--txt-primaire); }
         .modal-card p { font-size: 13px; color: var(--txt-primaire); margin-bottom: 16px; line-height: 1.35; padding: 0 4px; }
         .modal-actions { display: flex; border-top: 1px solid var(--separator); margin: 0 -16px 0 -16px; }
-        .modal-btn {
-            flex: 1; padding: 11px; background: none; border: none; font-size: 16px; cursor: pointer; color: var(--system-blue); transition: background 0.15s; outline: none;
-        }
-        .modal-btn:first-child { border-right: 1px solid var(--separator); border-bottom-left-radius: 14px; }
-        .modal-btn:last-child { border-bottom-right-radius: 14px; }
+        .modal-btn { flex: 1; padding: 11px; background: none; border: none; font-size: 16px; color: var(--system-blue); }
+        .modal-btn:first-child { border-right: 1px solid var(--separator); }
         .modal-btn.destructive { color: var(--system-red); font-weight: 600; }
-        .modal-btn.bold { font-weight: 600; }
 
-        /* --- RESPONSIVE MOBILE / IPHONE --- */
+        /* Style spécifique pour la modale Paramètres */
+        .settings-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-top: 1px solid var(--separator); margin: 0 -16px; padding-left: 16px; padding-right: 16px;}
+        .settings-row span { font-size: 15px; font-weight: 500;}
+
+        /* Toggle FaceID (Style Apple Switch) */
+        .switch { position: relative; display: inline-block; width: 46px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider-round { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--separator); transition: .3s; border-radius: 34px; }
+        .slider-round:before { position: absolute; content: ""; height: 24px; width: 24px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);}
+        input:checked + .slider-round { background-color: var(--system-green); }
+        input:checked + .slider-round:before { transform: translateX(18px); }
+
         @media (max-width: 1024px) {
             .topbar { padding: calc(12px + env(safe-area-inset-top)) 20px 12px; min-height: 60px; }
             .topbar h1 { font-size: 24px; }
-            .badge-large { font-size: 14px; padding: 4px 10px; }
-            
-            .sidebar { 
-                position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh; max-height: 100dvh;
-                z-index: 100; box-shadow: 4px 0 15px rgba(0,0,0,0.1);
-                transform: translateX(0); width: 280px !important; opacity: 1 !important;
-            }
-            body.sidebar-hidden .sidebar { 
-                transform: translateX(-100%); pointer-events: none;
-            }
-            body:not(.sidebar-hidden) .sidebar-overlay {
-                display: block; opacity: 1;
-            }
-
+            .sidebar { position: fixed; top: 0; left: 0; height: 100dvh; z-index: 100; transform: translateX(0); width: 280px !important; }
+            body.sidebar-hidden .sidebar { transform: translateX(-100%); pointer-events: none; }
+            body:not(.sidebar-hidden) .sidebar-overlay { display: block; opacity: 1; }
             .main-content { width: 100vw; }
             .dashboard-container { padding: 15px; gap: 20px; }
             .chart-container { height: 320px !important; padding: 50px 15px 15px 15px !important; }
-            .subject-title-area { flex-wrap: wrap; }
-            .apple-input { font-size: 16px; }
         }
 
-        /* --- VRAIE CORRECTION POUR MOBILE --- */
         @media (max-width: 500px) {
             .topbar { padding: 10px 12px; gap: 8px; }
             .topbar-left { gap: 6px; } 
             .topbar h1 { font-size: 18px; }
-            .topbar-actions { gap: 6px; }
-            
-            .ios-pill-btn { 
-                padding: 0; 
-                width: 36px; 
-                height: 36px; 
-                border-radius: 50%; 
-                display: flex;
-                justify-content: center; 
-                align-items: center; 
-            }
-            
+            .ios-pill-btn { padding: 0; width: 36px; height: 36px; border-radius: 50%; }
             .ios-pill-btn span.btn-text { display: none; }
-            .ios-pill-btn svg { margin: 0; display: block; }
-
             .form-row { flex-direction: column; align-items: stretch; }
             .add-note-form { flex-direction: column; align-items: flex-start; }
             .apple-input { width: 100%; }
-
             .title-badge { font-size: 13px; padding: 4px 8px; margin-left: auto; }
             .moy-text { display: none; } 
         }
@@ -489,11 +376,49 @@
 </head>
 <body class="system-theme">
 
+    <div id="auth-overlay" class="full-overlay">
+        <div class="auth-card">
+            <h2>Carnet Pro</h2>
+            <p>Connectez-vous pour retrouver vos notes.</p>
+            <input type="email" id="auth-email" class="auth-input" placeholder="Adresse e-mail">
+            <input type="password" id="auth-password" class="auth-input" placeholder="Mot de passe">
+            <div id="error-msg"></div>
+            <button class="auth-btn btn-primary" onclick="login()">Se connecter</button>
+            <button class="auth-btn btn-secondary" onclick="register()">Créer un compte</button>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal-backdrop">
+        <div class="modal-card" style="padding-bottom: 0;">
+            <h3>Paramètres</h3>
+            <p id="user-email-display" style="margin-bottom: 5px;">user@email.com</p>
+            
+            <div class="settings-row">
+                <span>Connexion Biométrique</span>
+                <label class="switch">
+                    <input type="checkbox" id="biometric-toggle" onchange="toggleBiometrics(this)">
+                    <span class="slider-round"></span>
+                </label>
+            </div>
+            
+            <div class="modal-actions" style="margin-top: 15px;">
+                <button class="modal-btn" onclick="closeSettings()">Fermer</button>
+                <button class="modal-btn destructive" onclick="logout()">Déconnexion</button>
+            </div>
+        </div>
+    </div>
+
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <aside class="sidebar">
         <div class="sidebar-header">
             <h2>Mon Carnet</h2>
+            <button class="icon-btn" onclick="openSettings()" aria-label="Paramètres">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+            </button>
         </div>
         <div class="sidebar-menu" id="sidebar-navigation"></div>
         <button class="sidebar-btn edit-only-block" onclick="addNewYear()">+ Ajouter une Année</button>
@@ -506,7 +431,7 @@
     <main class="main-content">
         <div class="topbar">
             <div class="topbar-left">
-                <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Afficher/Masquer la barre latérale">
+                <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                         <line x1="9" y1="3" x2="9" y2="21"></line>
@@ -517,28 +442,18 @@
             
             <div class="topbar-actions">
                 <button id="sim-toggle-btn" class="ios-pill-btn sim-toggle-pill" onclick="toggleGlobalSimulationBtn()">
-                    <svg class="icon-sim-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                    <svg class="icon-sim-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
+                    <svg class="icon-sim-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <svg class="icon-sim-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
                     <span class="btn-text">Simulations</span>
                 </button>
                 
                 <button id="btn-edit-mode" class="ios-pill-btn edit-toggle-pill" onclick="toggleEditMode()">
-                    <svg class="icon-edit-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-                    </svg>
-                    <svg class="icon-edit-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
+                    <svg class="icon-edit-off" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+                    <svg class="icon-edit-on" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     <span class="btn-text">Modifier</span>
                 </button>
 
-                <button id="theme-toggle-btn" class="ios-pill-btn sim-toggle-pill theme-circle-btn" onclick="cycleTheme()" aria-label="Changer de thème">
+                <button id="theme-toggle-btn" class="ios-pill-btn sim-toggle-pill theme-circle-btn" onclick="cycleTheme()">
                     <svg id="theme-icon-active" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></svg>
                 </button>
             </div>
@@ -558,7 +473,7 @@
     <script>
         const svgTrash = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
-        // === DEBUT CONFIGURATION FIREBASE ===
+        // === CONFIGURATION FIREBASE ===
         const firebaseConfig = {
             apiKey: "AIzaSyCI2ESfSMw5QhH-WLZ2HYwDwMeoAmuRxfw",
             authDomain: "notes-fbc4f.firebaseapp.com",
@@ -571,29 +486,17 @@
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
-        const userDocRef = database.ref('carnet/mes_notes_privees');
-        // === FIN CONFIGURATION FIREBASE ===
+        const auth = firebase.auth();
+        
+        // La référence à la BDD sera définie lors de la connexion
+        let userDocRef = null;
+        let currentUser = null;
 
         const defaultData = {
             years: {
                 "Année 1": {
                     "Semestre 1": [
-                        { name: "CGE", coef: 6, appreciation: "Excellent semestre. Le travail est sérieux.", notes: [{val: 18, coef: 2, sim: false}, {val: 18, coef: 1, sim: false}, {val: 17.5, coef: 2, sim: false}] },
-                        { name: "Formation Humaine", coef: 6, appreciation: "Bonne participation globale.", notes: [{val: 16, coef: 1, sim: false}, {val: 16, coef: 1, sim: false}] },
-                        { 
-                            name: "Génie Mécanique", coef: 7, appreciation: "Très bons résultats en mécanique.", 
-                            subSubjects: [
-                                { name: "Dimensionnement", coef: 4, notes: [{val: 15, coef: 2, sim: false}, {val: 17.7, coef: 2, sim: false}] },
-                                { name: "Construction Mécanique", coef: 3, notes: [{val: 12.9, coef: 1, sim: false}, {val: 14, coef: 2, sim: false}] }
-                            ]
-                        },
-                        { name: "Génie électrique", coef: 18, appreciation: "Résultats satisfaisants.", notes: [{val: 16.2, coef: 3.25, sim: false}, {val: 18, coef: 3, sim: false}, {val: 9.5, coef: 3, sim: false}, {val: 12.1, coef: 1, sim: false}, {val: 15.1, coef: 1, sim: false}, {val: 20, coef: 0.5, sim: false}, {val: 15.7, coef: 3, sim: false}, {val: 15.8, coef: 3.25, sim: false}] },
-                        { name: "Anglais", coef: 10, appreciation: "Travail très rigoureux.", notes: [{val: 9.75, coef: 1, sim: false}, {val: 12, coef: 1, sim: false}, {val: 13.5, coef: 2, sim: false}, {val: 14, coef: 1, sim: false}, {val: 17, coef: 1, sim: false}] }
-                    ],
-                    "Semestre 2": [
-                        { name: "CGE", coef: 6, appreciation: "Bonne continuation.", notes: [{val: 15.5, coef: 3, sim: false}, {val: 16, coef: 3, sim: false}] },
-                        { name: "Formation Humaine", coef: 6, appreciation: "Toujours pertinent.", notes: [{val: 17.5, coef: 1, sim: false}, {val: 14, coef: 1, sim: false}] },
-                        { name: "Génie électrique", coef: 18, appreciation: "Forte progression, bravo.", notes: [{val: 11.1, coef: 3.25, sim: false}, {val: 16.9, coef: 1, sim: false}, {val: 20, coef: 4, sim: false}, {val: 20, coef: 4, sim: false}, {val: 18, coef: 0.5, sim: false}, {val: 15, coef: 3.25, sim: true}] },
+                        { name: "Exemple de Matière", coef: 1, appreciation: "Bienvenue sur Carnet Pro !", notes: [{val: 20, coef: 1, sim: false}] }
                     ]
                 }
             }
@@ -605,23 +508,86 @@
         let openYears = { "Année 1": true }; let openSubjects = new Set(); 
         
         let currentThemeState = localStorage.getItem('apple_notes_theme_v5') || 'system';
-        let currentChartMode = 'bar'; // Graphique à bâtons par défaut
+        let currentChartMode = 'bar'; 
+
+        // === GESTION DE L'AUTHENTIFICATION ===
+        
+        auth.onAuthStateChanged(user => {
+            const overlay = document.getElementById('auth-overlay');
+            if (user) {
+                // Connecté
+                currentUser = user;
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 400);
+                document.getElementById('user-email-display').innerText = user.email;
+                
+                // Chemin unique pour chaque utilisateur !
+                userDocRef = database.ref(`carnet/utilisateurs/${user.uid}/mes_notes`);
+                
+                // On démarre l'application
+                initApp();
+            } else {
+                // Déconnecté
+                currentUser = null;
+                userDocRef = null;
+                overlay.style.display = 'flex';
+                setTimeout(() => overlay.style.opacity = '1', 10);
+            }
+        });
+
+        function login() {
+            const email = document.getElementById('auth-email').value;
+            const pwd = document.getElementById('auth-password').value;
+            const err = document.getElementById('error-msg');
+            err.innerText = "Connexion en cours...";
+            
+            auth.signInWithEmailAndPassword(email, pwd).catch(error => {
+                err.innerText = "Erreur: Email ou mot de passe incorrect.";
+            });
+        }
+
+        function register() {
+            const email = document.getElementById('auth-email').value;
+            const pwd = document.getElementById('auth-password').value;
+            const err = document.getElementById('error-msg');
+            
+            if(pwd.length < 6) { err.innerText = "Le mot de passe doit faire 6 caractères mini."; return; }
+            err.innerText = "Création du compte...";
+            
+            auth.createUserWithEmailAndPassword(email, pwd).catch(error => {
+                err.innerText = "Erreur: Ce compte existe déjà ou l'email est invalide.";
+            });
+        }
+
+        function logout() {
+            closeSettings();
+            auth.signOut();
+        }
+
+        function openSettings() { document.getElementById('settings-modal').classList.add('show'); }
+        function closeSettings() { document.getElementById('settings-modal').classList.remove('show'); }
+
+        function toggleBiometrics(checkbox) {
+            // Ici, l'intégration complète de l'API WebAuthn (Passkeys) viendra plus tard.
+            // Pour l'instant, on simule l'activation et on affiche un message.
+            if(checkbox.checked) {
+                alert("La fonctionnalité Face ID / Touch ID (WebAuthn) sera liée à Firebase Auth dans une prochaine mise à jour.");
+            }
+        }
+
 
         // === FONCTION D'ABRÉVIATION INTELLIGENTE ===
         function getShortName(str) {
             return str.replace(/Année\s*/gi, 'A').replace(/Semestre\s*/gi, 'S');
         }
 
-        // Calcule si le titre déborde et l'abrège si nécessaire
         function adjustTitleSize() {
             const titleSpan = document.getElementById('dynamic-page-title');
             if (!titleSpan || isEditMode) return; 
-            
             const fullText = titleSpan.getAttribute('data-fulltext');
             if (!fullText) return;
 
             titleSpan.innerText = fullText;
-            
             if (titleSpan.scrollWidth > titleSpan.clientWidth + 2) {
                 titleSpan.innerText = getShortName(fullText);
             }
@@ -644,19 +610,22 @@
 
         function checkEditGuard() {
             if (!isEditMode) {
-                showCustomAlert("Modification refusée", "Vous devez impérativement passer en mode 'Modifier' pour effectuer cette action.");
+                showCustomAlert("Modification refusée", "Vous devez passer en mode 'Modifier' pour effectuer cette action.");
                 return false;
             }
             return true;
         }
 
         function save(skipHistory = false) { 
-            localStorage.setItem('apple_notes_db_v6', JSON.stringify(db)); 
+            // On sauvegarde localement en ajoutant l'UID pour ne pas écraser les notes d'un autre compte sur le même PC
+            if(currentUser) {
+                localStorage.setItem(`apple_notes_db_v6_${currentUser.uid}`, JSON.stringify(db)); 
+            }
             if(!skipHistory) pushHistory(); 
             
-            userDocRef.set(db).catch(error => {
-                console.error("Erreur de synchronisation:", error);
-            });
+            if(userDocRef) {
+                userDocRef.set(db).catch(error => console.error("Erreur de synchro:", error));
+            }
         }
 
         function pushHistory() {
@@ -670,24 +639,13 @@
         function updateHistoryButtons() { document.getElementById('btn-undo').disabled = (historyIndex <= 0); document.getElementById('btn-redo').disabled = (historyIndex >= historyQueue.length - 1); }
 
         function toggleSidebar() { document.body.classList.toggle('sidebar-hidden'); }
-        
-        function closeSidebarOnMobile() {
-            if (window.innerWidth <= 1024) { document.body.classList.add('sidebar-hidden'); }
-        }
-
-        const themeIcons = {
-            system: `<circle cx="12" cy="12" r="9"></circle><path d="M12 3v18a9 9 0 0 0 0-18z" fill="currentColor"></path>`,
-            light: `<circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.22" x2="5.64" y2="17.78"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>`,
-            dark: `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`
-        };
+        function closeSidebarOnMobile() { if (window.innerWidth <= 1024) { document.body.classList.add('sidebar-hidden'); } }
 
         function applyTheme() {
             document.body.classList.remove('light-theme', 'dark-theme', 'system-theme');
             document.body.classList.add(currentThemeState + '-theme');
-            
             const iconContainer = document.getElementById('theme-icon-active');
             if(iconContainer) { iconContainer.innerHTML = themeIcons[currentThemeState]; }
-            
             if (globalChart) renderMainContent();
         }
 
@@ -737,17 +695,11 @@
             if (isTogglingChart) return;
             isTogglingChart = true;
 
-            if (btn) {
-                btn.classList.toggle('bar-mode');
-            }
-            
+            if (btn) { btn.classList.toggle('bar-mode'); }
             currentChartMode = currentChartMode === 'radar' ? 'bar' : 'radar';
             
             clearTimeout(chartToggleTimeout);
-            chartToggleTimeout = setTimeout(() => {
-                renderMainContent();
-                isTogglingChart = false;
-            }, 300);
+            chartToggleTimeout = setTimeout(() => { renderMainContent(); isTogglingChart = false; }, 300);
         }
 
         function showCustomConfirm(title, message, onConfirm, isDestructive = false) {
@@ -755,10 +707,7 @@
             document.getElementById('modal-title').innerText = title;
             document.getElementById('modal-message').innerText = message;
             const actions = document.getElementById('modal-actions-container');
-            actions.innerHTML = `
-                <button class="modal-btn" onclick="closeCustomModal()">Annuler</button>
-                <button class="modal-btn ${isDestructive ? 'destructive' : 'bold'}" id="modal-confirm-btn">Confirmer</button>
-            `;
+            actions.innerHTML = `<button class="modal-btn" onclick="closeCustomModal()">Annuler</button><button class="modal-btn ${isDestructive ? 'destructive' : 'bold'}" id="modal-confirm-btn">Confirmer</button>`;
             document.getElementById('modal-confirm-btn').onclick = () => { closeCustomModal(); onConfirm(); };
             modal.classList.add('show');
         }
@@ -777,116 +726,30 @@
         document.addEventListener('keydown', (e) => {
             const activeElem = document.activeElement;
             const isTyping = activeElem && (activeElem.tagName === 'INPUT' || activeElem.getAttribute('contenteditable') === 'true');
-            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-                if (isTyping) return;
-                e.preventDefault();
-                if (e.shiftKey) redo(); else undo();
-            }
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') { if (isTyping) return; e.preventDefault(); if (e.shiftKey) redo(); else undo(); }
         });
 
         function setViewPage(yName, pName) { activeView = 'page'; currentYear = yName; currentPage = pName; openSubjects.clear(); renderSidebar(); renderMainContent(); closeSidebarOnMobile(); }
         function setViewBilanAnnuel(yName) { activeView = 'bilan_annuel'; currentYear = yName; renderSidebar(); renderMainContent(); closeSidebarOnMobile(); }
         function setViewGlobal() { activeView = 'accueil'; renderSidebar(); renderMainContent(); closeSidebarOnMobile(); }
 
-        function addNewYear() {
-            if(!checkEditGuard()) return;
-            db.years["Nouvelle Année"] = {};
-            openYears["Nouvelle Année"] = true;
-            save();
-            setViewBilanAnnuel("Nouvelle Année");
-        }
-
-        function addNewPage(yName) {
-            if(!checkEditGuard()) return;
-            db.years[yName]["Nouveau Semestre"] = [];
-            save();
-            setViewPage(yName, "Nouveau Semestre");
-        }
-
-        function deleteYear(yName) { 
-            if(!checkEditGuard()) return;
-            showCustomConfirm("Supprimer l'année", `Voulez-vous supprimer l'année "${yName}" et toutes ses données définitivement ?`, () => {
-                delete db.years[yName]; delete openYears[yName]; checkDataConsistency(); save(); renderSidebar(); renderMainContent(); 
-            }, true);
-        }
-
-        function deletePage() { 
-            if(!checkEditGuard()) return;
-            showCustomConfirm("Supprimer la page", `Supprimer définitivement la page "${currentPage}" ?`, () => {
-                delete db.years[currentYear][currentPage]; let pages = Object.keys(db.years[currentYear]); if(pages.length > 0) currentPage = pages[0]; else activeView = 'bilan_annuel'; save(); renderSidebar(); renderMainContent(); 
-            }, true);
-        }
-
-        function updateYearName(oldName, el) {
-            if(!checkEditGuard()) { el.innerText = oldName; return; }
-            let newName = el.innerText.trim();
-            if(!newName || newName === oldName) { el.innerText = oldName; return; }
-            if(db.years[newName]) { el.innerText = oldName; showCustomAlert("Nom existant", "Cette année existe déjà."); return; }
-            let newYears = {}; for(let y in db.years) { if(y === oldName) newYears[newName] = db.years[y]; else newYears[y] = db.years[y]; }
-            db.years = newYears; if(currentYear === oldName) currentYear = newName;
-            if(openYears[oldName]) { openYears[newName] = true; delete openYears[oldName]; }
-            save(); renderSidebar(); renderMainContent();
-        }
-
-        function updatePageName(oldName, el) {
-            if(!checkEditGuard()) { el.innerText = oldName; return; }
-            let newName = el.innerText.trim();
-            if(!newName || newName === oldName) { el.innerText = oldName; return; }
-            if(db.years[currentYear][newName]) { el.innerText = oldName; showCustomAlert("Nom existant", "Ce semestre existe déjà."); return; }
-            let newPages = {}; for(let p in db.years[currentYear]) { if(p === oldName) newPages[newName] = db.years[currentYear][p]; else newPages[p] = db.years[currentYear][p]; }
-            db.years[currentYear] = newPages; currentPage = newName; save(); renderSidebar(); renderMainContent();
-        }
-
-        function updateSubjectField(field, sIdx, el) {
-            if(!checkEditGuard()) return;
-            let sub = db.years[currentYear][currentPage][sIdx]; let val = el.innerText.trim();
-            if (field === 'coef') { let num = parseFloat(val.replace(',','.')); if(isNaN(num) || num <= 0) { el.innerText = sub.coef; return; } if(sub.coef !== num) { sub.coef = num; save(); renderMainContent(); } } 
-            else { if(!val && field==='name') { el.innerText = sub.name; return; } if(sub[field] !== val) { sub[field] = val; save(); renderMainContent(); } }
-        }
-
-        function updateSubSubjectField(field, sIdx, subIdx, el) {
-            if(!checkEditGuard()) return;
-            let sub = db.years[currentYear][currentPage][sIdx].subSubjects[subIdx]; let val = el.innerText.trim();
-            if (field === 'coef') { let num = parseFloat(val.replace(',','.')); if(isNaN(num) || num <= 0) { el.innerText = sub.coef; return; } if(sub.coef !== num) { sub.coef = num; save(); renderMainContent(); } } 
-            else { if(!val) { el.innerText = sub.name; return; } if(sub.name !== val) { sub.name = val; save(); renderMainContent(); } }
-        }
-
+        function addNewYear() { if(!checkEditGuard()) return; db.years["Nouvelle Année"] = {}; openYears["Nouvelle Année"] = true; save(); setViewBilanAnnuel("Nouvelle Année"); }
+        function addNewPage(yName) { if(!checkEditGuard()) return; db.years[yName]["Nouveau Semestre"] = []; save(); setViewPage(yName, "Nouveau Semestre"); }
+        function deleteYear(yName) { if(!checkEditGuard()) return; showCustomConfirm("Supprimer l'année", `Supprimer l'année "${yName}" ?`, () => { delete db.years[yName]; delete openYears[yName]; checkDataConsistency(); save(); renderSidebar(); renderMainContent(); }, true); }
+        function deletePage() { if(!checkEditGuard()) return; showCustomConfirm("Supprimer la page", `Supprimer "${currentPage}" ?`, () => { delete db.years[currentYear][currentPage]; let pages = Object.keys(db.years[currentYear]); if(pages.length > 0) currentPage = pages[0]; else activeView = 'bilan_annuel'; save(); renderSidebar(); renderMainContent(); }, true); }
+        function updateYearName(oldName, el) { if(!checkEditGuard()) { el.innerText = oldName; return; } let newName = el.innerText.trim(); if(!newName || newName === oldName) { el.innerText = oldName; return; } if(db.years[newName]) { el.innerText = oldName; showCustomAlert("Erreur", "Cette année existe déjà."); return; } let newYears = {}; for(let y in db.years) { if(y === oldName) newYears[newName] = db.years[y]; else newYears[y] = db.years[y]; } db.years = newYears; if(currentYear === oldName) currentYear = newName; if(openYears[oldName]) { openYears[newName] = true; delete openYears[oldName]; } save(); renderSidebar(); renderMainContent(); }
+        function updatePageName(oldName, el) { if(!checkEditGuard()) { el.innerText = oldName; return; } let newName = el.innerText.trim(); if(!newName || newName === oldName) { el.innerText = oldName; return; } if(db.years[currentYear][newName]) { el.innerText = oldName; showCustomAlert("Erreur", "Ce semestre existe déjà."); return; } let newPages = {}; for(let p in db.years[currentYear]) { if(p === oldName) newPages[newName] = db.years[currentYear][p]; else newPages[p] = db.years[currentYear][p]; } db.years[currentYear] = newPages; currentPage = newName; save(); renderSidebar(); renderMainContent(); }
+        function updateSubjectField(field, sIdx, el) { if(!checkEditGuard()) return; let sub = db.years[currentYear][currentPage][sIdx]; let val = el.innerText.trim(); if (field === 'coef') { let num = parseFloat(val.replace(',','.')); if(isNaN(num) || num <= 0) { el.innerText = sub.coef; return; } if(sub.coef !== num) { sub.coef = num; save(); renderMainContent(); } } else { if(!val && field==='name') { el.innerText = sub.name; return; } if(sub[field] !== val) { sub[field] = val; save(); renderMainContent(); } } }
+        function updateSubSubjectField(field, sIdx, subIdx, el) { if(!checkEditGuard()) return; let sub = db.years[currentYear][currentPage][sIdx].subSubjects[subIdx]; let val = el.innerText.trim(); if (field === 'coef') { let num = parseFloat(val.replace(',','.')); if(isNaN(num) || num <= 0) { el.innerText = sub.coef; return; } if(sub.coef !== num) { sub.coef = num; save(); renderMainContent(); } } else { if(!val) { el.innerText = sub.name; return; } if(sub.name !== val) { sub.name = val; save(); renderMainContent(); } } }
         function handleEditableKeydown(e, el) { if (e.key === 'Enter') { e.preventDefault(); el.blur(); } }
         function preventAccordion(e) { if(isEditMode) e.stopPropagation(); }
+        function updateNoteField(field, sIdx, subIdx, nIdx, el) { if(!checkEditGuard()) return; let target = db.years[currentYear][currentPage][sIdx]; let note = (subIdx !== null) ? target.subSubjects[subIdx].notes[nIdx] : target.notes[nIdx]; let val = parseFloat(el.innerText.trim().replace(',','.')); if(isNaN(val) || (field === 'val' && (val < 0 || val > 20)) || (field === 'coef' && val <= 0)) { el.innerText = note[field]; return; } if(note[field] !== val) { note[field] = val; openSubjects.add(sIdx.toString()); save(); renderMainContent(); } }
+        function toggleInlineSim(sIdx, subIdx, nIdx) { if(!checkEditGuard()) return; let target = db.years[currentYear][currentPage][sIdx]; let note = (subIdx !== null) ? target.subSubjects[subIdx].notes[nIdx] : target.notes[nIdx]; note.sim = !note.sim; openSubjects.add(sIdx.toString()); save(); renderMainContent(); }
 
-        function updateNoteField(field, sIdx, subIdx, nIdx, el) {
-            if(!checkEditGuard()) return;
-            let target = db.years[currentYear][currentPage][sIdx];
-            let note = (subIdx !== null) ? target.subSubjects[subIdx].notes[nIdx] : target.notes[nIdx];
-            let val = parseFloat(el.innerText.trim().replace(',','.'));
-            if(isNaN(val) || (field === 'val' && (val < 0 || val > 20)) || (field === 'coef' && val <= 0)) { el.innerText = note[field]; return; }
-            if(note[field] !== val) { note[field] = val; openSubjects.add(sIdx.toString()); save(); renderMainContent(); }
-        }
-
-        function toggleInlineSim(sIdx, subIdx, nIdx) {
-            if(!checkEditGuard()) return;
-            let target = db.years[currentYear][currentPage][sIdx];
-            let note = (subIdx !== null) ? target.subSubjects[subIdx].notes[nIdx] : target.notes[nIdx];
-            note.sim = !note.sim; openSubjects.add(sIdx.toString()); save(); renderMainContent();
-        }
-
-        function calcNotesAvg(notes) {
-            if (!notes || notes.length === 0) return null;
-            let sum = 0, coefSum = 0; notes.forEach(n => { if (n.sim && !includeSimulations) return; sum += n.val * n.coef; coefSum += n.coef; });
-            return coefSum === 0 ? null : sum / coefSum;
-        }
-        function calcSubjectAvg(subject) {
-            if (subject.subSubjects) { let sum = 0, coefSum = 0; subject.subSubjects.forEach(sub => { const avg = calcNotesAvg(sub.notes); if (avg !== null) { sum += avg * sub.coef; coefSum += sub.coef; } }); return coefSum === 0 ? null : sum / coefSum; }
-            return calcNotesAvg(subject.notes);
-        }
-        function calcPageAvg(subjectsList) {
-            if(!subjectsList || subjectsList.length === 0) return null; let sum = 0, coefSum = 0;
-            subjectsList.forEach(sub => { const avg = calcSubjectAvg(sub); if (avg !== null) { sum += avg * sub.coef; coefSum += sub.coef; } }); return coefSum === 0 ? null : sum / coefSum;
-        }
-        function calcYearAvg(yearName) {
-            const pages = db.years[yearName]; let sum = 0, count = 0;
-            for (let pName in pages) { const avg = calcPageAvg(pages[pName]); if (avg !== null) { sum += avg; count++; } } return count === 0 ? null : sum / count;
-        }
+        function calcNotesAvg(notes) { if (!notes || notes.length === 0) return null; let sum = 0, coefSum = 0; notes.forEach(n => { if (n.sim && !includeSimulations) return; sum += n.val * n.coef; coefSum += n.coef; }); return coefSum === 0 ? null : sum / coefSum; }
+        function calcSubjectAvg(subject) { if (subject.subSubjects) { let sum = 0, coefSum = 0; subject.subSubjects.forEach(sub => { const avg = calcNotesAvg(sub.notes); if (avg !== null) { sum += avg * sub.coef; coefSum += sub.coef; } }); return coefSum === 0 ? null : sum / coefSum; } return calcNotesAvg(subject.notes); }
+        function calcPageAvg(subjectsList) { if(!subjectsList || subjectsList.length === 0) return null; let sum = 0, coefSum = 0; subjectsList.forEach(sub => { const avg = calcSubjectAvg(sub); if (avg !== null) { sum += avg * sub.coef; coefSum += sub.coef; } }); return coefSum === 0 ? null : sum / coefSum; }
+        function calcYearAvg(yearName) { const pages = db.years[yearName]; let sum = 0, count = 0; for (let pName in pages) { const avg = calcPageAvg(pages[pName]); if (avg !== null) { sum += avg; count++; } } return count === 0 ? null : sum / count; }
         function formatVal(v) { return v !== null && !isNaN(v) ? v.toFixed(2) : '--'; }
         function getBadgeClass(v) { return v >= 14 ? 'bg-good' : (v >= 10 ? 'bg-medium' : 'bg-bad'); }
         function getTextClass(v) { return v >= 14 ? 'text-good' : (v >= 10 ? 'text-medium' : 'text-bad'); }
@@ -906,14 +769,8 @@
             if(!checkEditGuard()) return;
             showCustomConfirm("Supprimer la note", "Voulez-vous supprimer définitivement cette note ?", () => {
                 let target = db.years[currentYear][currentPage][sIdx];
-                if (subIdx !== null) {
-                    target.subSubjects[subIdx].notes.splice(nIdx, 1);
-                } else {
-                    target.notes.splice(nIdx, 1);
-                }
-                openSubjects.add(sIdx.toString()); 
-                save(); 
-                renderMainContent(); 
+                if (subIdx !== null) { target.subSubjects[subIdx].notes.splice(nIdx, 1); } else { target.notes.splice(nIdx, 1); }
+                openSubjects.add(sIdx.toString()); save(); renderMainContent(); 
             }, true);
         }
 
@@ -925,22 +782,11 @@
             let newSub = { name, coef, appreciation: "" };
             if(document.getElementById('add-sub-isnest').checked) newSub.subSubjects = []; else newSub.notes = [];
             db.years[currentYear][currentPage].push(newSub); 
-            nameInput.value = ''; coefInput.value = ''; document.getElementById('add-sub-isnest').checked = false;
-            save(); renderMainContent();
+            nameInput.value = ''; coefInput.value = ''; document.getElementById('add-sub-isnest').checked = false; save(); renderMainContent();
         }
-        function deleteSubject(sIdx) { 
-            if(!checkEditGuard()) return;
-            showCustomConfirm("Supprimer la matière", "Voulez-vous supprimer définitivement cette matière ?", () => {
-                db.years[currentYear][currentPage].splice(sIdx, 1); openSubjects.delete(sIdx.toString()); save(); renderMainContent(); 
-            }, true);
-        }
+        function deleteSubject(sIdx) { if(!checkEditGuard()) return; showCustomConfirm("Supprimer la matière", "Supprimer cette matière ?", () => { db.years[currentYear][currentPage].splice(sIdx, 1); openSubjects.delete(sIdx.toString()); save(); renderMainContent(); }, true); }
         function addSubSubject(sIdx) { if(!checkEditGuard()) return; db.years[currentYear][currentPage][sIdx].subSubjects.push({ name: "Matière", coef: 1, notes: [] }); openSubjects.add(sIdx.toString()); save(); renderMainContent(); }
-        function deleteSubSubject(sIdx, subIdx) { 
-            if(!checkEditGuard()) return;
-            showCustomConfirm("Supprimer la sous-matière", "Voulez-vous supprimer cette sous-matière ?", () => {
-                db.years[currentYear][currentPage][sIdx].subSubjects.splice(subIdx, 1); openSubjects.add(sIdx.toString()); save(); renderMainContent(); 
-            }, true);
-        }
+        function deleteSubSubject(sIdx, subIdx) { if(!checkEditGuard()) return; showCustomConfirm("Supprimer", "Supprimer cette sous-matière ?", () => { db.years[currentYear][currentPage][sIdx].subSubjects.splice(subIdx, 1); openSubjects.add(sIdx.toString()); save(); renderMainContent(); }, true); }
 
         function toggleYearSection(yName) { openYears[yName] = !openYears[yName]; renderSidebar(); }
 
@@ -977,28 +823,20 @@
             checkDataConsistency();
             const content = document.getElementById('content-area'); const title = document.getElementById('page-title');
             const simToggle = document.getElementById('sim-toggle-btn');
-            
             simToggle.style.display = activeView === 'accueil' ? 'none' : 'inline-flex';
+            const activeChartRenderMode = currentChartMode;
 
             let chartToggleHtml = `
                 <button class="custom-apple-toggle ${currentChartMode === 'bar' ? 'bar-mode' : ''}" onclick="toggleChartType(this)">
                     <div class="toggle-thumb">
-                        <svg class="icon-radar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        <svg class="icon-bar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="20" x2="18" y2="10"></line>
-                            <line x1="12" y1="20" x2="12" y2="4"></line>
-                            <line x1="6" y1="20" x2="6" y2="14"></line>
-                        </svg>
+                        <svg class="icon-radar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon><circle cx="12" cy="12" r="3"></circle></svg>
+                        <svg class="icon-bar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
                     </div>
                 </button>
             `;
 
             if (activeView === 'page') {
                 const pageAvg = calcPageAvg(db.years[currentYear][currentPage]);
-                
                 title.innerHTML = `
                     <span id="dynamic-page-title" class="${isEditMode ? 'editable-text' : ''} title-text-ellipsis" contenteditable="${isEditMode}" data-fulltext="${currentPage}" onblur="updatePageName('${currentPage}', this)" onkeydown="handleEditableKeydown(event, this)">${currentPage}</span>
                     <button class="icon-btn danger-zone edit-only" style="flex-shrink: 0;" onclick="deletePage()">${svgTrash}</button>
@@ -1007,13 +845,7 @@
                 
                 const pageData = db.years[currentYear][currentPage] || [];
                 let labels = [], dataVals = [];
-                
-                let viewHtml = `
-                    <div class="chart-container" style="margin-bottom: 30px;">
-                        ${chartToggleHtml}
-                        <canvas id="mainChart"></canvas>
-                    </div>`;
-                viewHtml += `<div class="list-container">`;
+                let viewHtml = `<div class="chart-container" style="margin-bottom: 30px;">${chartToggleHtml}<canvas id="mainChart"></canvas></div><div class="list-container">`;
 
                 pageData.forEach((subject, sIdx) => {
                     const subAvg = calcSubjectAvg(subject); 
@@ -1049,31 +881,21 @@
                                 </div>`;
                         });
                         viewHtml += `<div class="edit-only-block" style="padding: 10px 20px;"><button class="btn-action" onclick="addSubSubject('${sIdx}')">+ Sous-matière</button></div>`;
-                    } else { 
-                        viewHtml += `<div class="notes-area">${buildNotesRows(subject.notes, sIdx, null)}</div>${buildAddNoteRow(sIdx, null)}`; 
-                    }
+                    } else { viewHtml += `<div class="notes-area">${buildNotesRows(subject.notes, sIdx, null)}</div>${buildAddNoteRow(sIdx, null)}`; }
                     viewHtml += `</div></div>`;
                 });
 
                 viewHtml += `</div><div class="edit-only-block">${buildAddSubjectForm()}</div>`;
                 content.innerHTML = viewHtml;
 
-                const datasetOptions = [{ 
-                    label: currentPage, 
-                    data: dataVals, 
-                    borderColor: '#007AFF', 
-                    backgroundColor: currentChartMode === 'bar' ? '#007AFF' : 'rgba(0, 122, 255, 0.05)',
-                    borderRadius: currentChartMode === 'bar' ? 8 : 0
-                }];
-                if (currentChartMode === 'radar') renderRadar(labels, datasetOptions);
-                else renderBarChart(labels, datasetOptions);
+                const datasetOptions = [{ label: currentPage, data: dataVals, borderColor: '#007AFF', backgroundColor: currentChartMode === 'bar' ? '#007AFF' : 'rgba(0, 122, 255, 0.05)', borderRadius: currentChartMode === 'bar' ? 8 : 0 }];
+                if (currentChartMode === 'radar') renderRadar(labels, datasetOptions); else renderBarChart(labels, datasetOptions);
 
             } else if (activeView === 'bilan_annuel') {
                 const titleStr = `Bilan Annuel ${currentYear}`;
                 title.innerHTML = `<span id="dynamic-page-title" class="title-text-ellipsis" data-fulltext="${titleStr}">${titleStr}</span>`;
                 
-                let labels = [], datasets = [];
-                let viewHtml = `<div class="bilan-grid">`;
+                let labels = [], datasets = []; let viewHtml = `<div class="bilan-grid">`;
                 const yAvg = calcYearAvg(currentYear);
                 viewHtml += `<div class="stat-card featured" style="grid-column: 1 / -1;"><h4>Moyenne de l'Année</h4><p>${formatVal(yAvg)}</p></div>`;
 
@@ -1084,57 +906,31 @@
                         db.years[currentYear][pName].forEach(sub => { if (!labels.includes(sub.name)) labels.push(sub.name); });
                     }
                 }
-                viewHtml += `</div>
-                    <div class="chart-container">
-                        ${chartToggleHtml}
-                        <canvas id="mainChart"></canvas>
-                    </div>`;
+                viewHtml += `</div><div class="chart-container">${chartToggleHtml}<canvas id="mainChart"></canvas></div>`;
                 content.innerHTML = viewHtml;
 
                 const colors = ['#007AFF', '#34C759', '#FF9500', '#AF52DE']; let idx = 0;
                 if (db.years[currentYear]) {
                     for (let pName in db.years[currentYear]) {
                         let d = []; 
-                        labels.forEach(l => { 
-                            const found = db.years[currentYear][pName].find(s => s.name === l); 
-                            let parsedAvg = found ? calcSubjectAvg(found) : 0;
-                            d.push(parsedAvg !== null ? parseFloat(parsedAvg.toFixed(2)) : 0); 
-                        });
-                        datasets.push({ 
-                            label: pName, 
-                            data: d, 
-                            borderColor: colors[idx%colors.length], 
-                            backgroundColor: currentChartMode === 'bar' ? colors[idx%colors.length] : 'transparent',
-                            borderRadius: currentChartMode === 'bar' ? 8 : 0
-                        }); 
+                        labels.forEach(l => { const found = db.years[currentYear][pName].find(s => s.name === l); d.push(found ? calcSubjectAvg(found) : 0); });
+                        datasets.push({ label: pName, data: d, borderColor: colors[idx%colors.length], backgroundColor: currentChartMode === 'bar' ? colors[idx%colors.length] : 'transparent', borderRadius: currentChartMode === 'bar' ? 8 : 0 }); 
                         idx++;
                     }
                 }
-
-                if (currentChartMode === 'radar') renderRadar(labels, datasets);
-                else renderBarChart(labels, datasets);
+                if (currentChartMode === 'radar') renderRadar(labels, datasets); else renderBarChart(labels, datasets);
 
             } else if (activeView === 'accueil') {
                 title.innerHTML = `<span id="dynamic-page-title" class="title-text-ellipsis" data-fulltext="Accueil">Accueil</span>`;
                 let labels = [], dataVals = [];
+                let viewHtml = `<div class="welcome-card" style="margin-bottom: 20px;"><h2>Bonjour !</h2><p>Voici le récapitulatif global de vos performances scolaires sur l'ensemble de votre cursus.</p></div>`;
                 
-                let viewHtml = `
-                    <div class="welcome-card" style="margin-bottom: 20px;">
-                        <h2>Bonjour !</h2>
-                        <p>Voici le récapitulatif global de vos performances scolaires sur l'ensemble de votre cursus.</p>
-                    </div>
-                `;
-                
-                let gridHtml = `<div class="bilan-grid">`;
-                let cardsHtml = ''; let sumGlobal = 0, countGlobal = 0;
+                let gridHtml = `<div class="bilan-grid">`; let cardsHtml = ''; let sumGlobal = 0, countGlobal = 0;
                 
                 for (let yName in db.years) {
                     const yAvg = calcYearAvg(yName);
                     cardsHtml += `<div class="stat-card"><h4>${yName}</h4><p class="${getTextClass(yAvg)}">${formatVal(yAvg)}</p></div>`;
-                    if (yAvg !== null) { 
-                        sumGlobal += yAvg; countGlobal++; labels.push(yName); 
-                        dataVals.push(parseFloat(yAvg.toFixed(2))); 
-                    }
+                    if (yAvg !== null) { sumGlobal += yAvg; countGlobal++; labels.push(yName); dataVals.push(parseFloat(yAvg.toFixed(2))); }
                 }
                 
                 const cycleAvg = countGlobal > 0 ? sumGlobal / countGlobal : null;
@@ -1142,27 +938,12 @@
                 gridHtml += cardsHtml; gridHtml += `</div>`;
                 
                 viewHtml += gridHtml;
-                viewHtml += `
-                    <div class="chart-container" style="height:340px;">
-                        ${chartToggleHtml}
-                        <canvas id="mainChart"></canvas>
-                    </div>`;
+                viewHtml += `<div class="chart-container" style="height:340px;">${chartToggleHtml}<canvas id="mainChart"></canvas></div>`;
                 
                 content.innerHTML = viewHtml;
-
-                const datasetOptions = [{ 
-                    label: 'Moyenne', 
-                    data: dataVals, 
-                    borderColor: '#007AFF',
-                    backgroundColor: currentChartMode === 'bar' ? '#007AFF' : 'rgba(0, 122, 255, 0.05)', 
-                    borderRadius: currentChartMode === 'bar' ? 8 : 0 
-                }];
-
-                if (currentChartMode === 'radar') renderRadar(labels, datasetOptions);
-                else renderBarChart(labels, datasetOptions);
+                const datasetOptions = [{ label: 'Moyenne', data: dataVals, borderColor: '#007AFF', backgroundColor: currentChartMode === 'bar' ? '#007AFF' : 'rgba(0, 122, 255, 0.05)', borderRadius: currentChartMode === 'bar' ? 8 : 0 }];
+                if (currentChartMode === 'radar') renderRadar(labels, datasetOptions); else renderBarChart(labels, datasetOptions);
             }
-
-            // Exécute la vérification d'abréviation une fois que le texte est injecté dans le DOM
             setTimeout(adjustTitleSize, 10);
         }
 
@@ -1173,149 +954,55 @@
             let html = '';
             notes.forEach((n, nIdx) => {
                 if (n.sim && !includeSimulations) return;
-                html += `
-                    <div class="note-item">
-                        <div>
-                            <span class="${isEditMode ? 'editable-text' : ''} note-value ${getTextClass(n.val)}" contenteditable="${isEditMode}" onblur="updateNoteField('val', '${sIdx}', ${subIdx}, ${nIdx}, this)" onkeydown="handleEditableKeydown(event, this)">${n.val}</span>
-                            <small style="color:var(--txt-secondaire); font-size:14px;">/20 (Coef: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateNoteField('coef', '${sIdx}', ${subIdx}, ${nIdx}, this)" onkeydown="handleEditableKeydown(event, this)">${n.coef}</span>)</small>
-                            ${isEditMode ? 
-                                `<span class="sim-badge ${n.sim ? 'active' : 'sim-off'}" onclick="toggleInlineSim('${sIdx}', ${subIdx}, ${nIdx})">${n.sim ? 'Simulée' : 'Réelle'}</span>` 
-                                : (n.sim ? `<span class="sim-badge active">Simulation</span>` : '')
-                            }
-                        </div>
-                        <div class="edit-only-flex"><button class="icon-btn danger-zone" onclick="deleteNote('${sIdx}', ${subIdx}, ${nIdx})">${svgTrash}</button></div>
-                    </div>`;
+                html += `<div class="note-item"><div><span class="${isEditMode ? 'editable-text' : ''} note-value ${getTextClass(n.val)}" contenteditable="${isEditMode}" onblur="updateNoteField('val', '${sIdx}', ${subIdx}, ${nIdx}, this)" onkeydown="handleEditableKeydown(event, this)">${n.val}</span><small style="color:var(--txt-secondaire); font-size:14px;">/20 (Coef: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateNoteField('coef', '${sIdx}', ${subIdx}, ${nIdx}, this)" onkeydown="handleEditableKeydown(event, this)">${n.coef}</span>)</small>${isEditMode ? `<span class="sim-badge ${n.sim ? 'active' : 'sim-off'}" onclick="toggleInlineSim('${sIdx}', ${subIdx}, ${nIdx})">${n.sim ? 'Simulée' : 'Réelle'}</span>` : (n.sim ? `<span class="sim-badge active">Simulation</span>` : '')}</div><div class="edit-only-flex"><button class="icon-btn danger-zone" onclick="deleteNote('${sIdx}', ${subIdx}, ${nIdx})">${svgTrash}</button></div></div>`;
             });
             return html;
         }
 
-        function buildAddNoteRow(sIdx, subIdx) {
-            const id = `f-${sIdx}-${subIdx}`;
-            return `
-                <div class="add-note-form edit-only-flex">
-                    <input class="apple-input" type="number" id="v-${id}" placeholder="Note" step="1" min="0" max="20" onkeydown="if(event.key==='Enter') submitNote('${sIdx}', ${subIdx}, '${id}')">
-                    <input class="apple-input" type="number" id="c-${id}" placeholder="Coef" step="1" min="0" onkeydown="if(event.key==='Enter') submitNote('${sIdx}', ${subIdx}, '${id}')">
-                    <label class="checkbox-label"><input type="checkbox" id="s-${id}"> Simulation</label>
-                    <button class="btn-action" onclick="submitNote('${sIdx}', ${subIdx}, '${id}')">Ajouter</button>
-                </div>`;
-        }
-
-        function buildAddSubjectForm() {
-            return `
-                <div class="main-form-box edit-only-flex">
-                    <h3 style="font-size:17px; margin:0; letter-spacing:-0.3px;">Nouvelle Matière</h3>
-                    <div class="form-row">
-                        <input class="apple-input" type="text" id="add-sub-name" placeholder="Nom de la matière" style="flex:1; min-width:150px;">
-                        <input class="apple-input" type="number" id="add-sub-coef" placeholder="Coef" step="1" style="width:80px;">
-                        <label class="checkbox-label"><input type="checkbox" id="add-sub-isnest"> Sous-matières</label>
-                        <button class="btn-action" onclick="submitSubject()">Créer</button>
-                    </div>
-                </div>`;
-        }
+        function buildAddNoteRow(sIdx, subIdx) { const id = `f-${sIdx}-${subIdx}`; return `<div class="add-note-form edit-only-flex"><input class="apple-input" type="number" id="v-${id}" placeholder="Note" step="1" min="0" max="20" onkeydown="if(event.key==='Enter') submitNote('${sIdx}', ${subIdx}, '${id}')"><input class="apple-input" type="number" id="c-${id}" placeholder="Coef" step="1" min="0" onkeydown="if(event.key==='Enter') submitNote('${sIdx}', ${subIdx}, '${id}')"><label class="checkbox-label"><input type="checkbox" id="s-${id}"> Simulation</label><button class="btn-action" onclick="submitNote('${sIdx}', ${subIdx}, '${id}')">Ajouter</button></div>`; }
+        function buildAddSubjectForm() { return `<div class="main-form-box edit-only-flex"><h3 style="font-size:17px; margin:0; letter-spacing:-0.3px;">Nouvelle Matière</h3><div class="form-row"><input class="apple-input" type="text" id="add-sub-name" placeholder="Nom de la matière" style="flex:1; min-width:150px;"><input class="apple-input" type="number" id="add-sub-coef" placeholder="Coef" step="1" style="width:80px;"><label class="checkbox-label"><input type="checkbox" id="add-sub-isnest"> Sous-matières</label><button class="btn-action" onclick="submitSubject()">Créer</button></div></div>`; }
 
         function renderRadar(labels, datasets) { 
             const ctx = document.getElementById('mainChart').getContext('2d'); if (globalChart) globalChart.destroy(); 
             const isDark = isEffectivelyDark();
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
-            const labelColor = isDark ? '#AEAEB2' : '#1C1C1E';
-            globalChart = new Chart(ctx, { 
-                type: 'radar', data: { labels, datasets }, 
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    scales: { 
-                        r: { 
-                            min: 0, max: 20, 
-                            grid: { color: gridColor }, angleLines: { color: gridColor }, 
-                            pointLabels: { color: labelColor, font: { size: 10, weight: '600' } }, 
-                            ticks: { color: '#8E8E93', backdropColor: 'transparent', stepSize: 4 } 
-                        } 
-                    }, 
-                    plugins: { legend: { labels: { color: labelColor, boxWidth: 12, font: { size: 12 } } } } 
-                } 
-            }); 
+            globalChart = new Chart(ctx, { type: 'radar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { r: { min: 0, max: 20, grid: { color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }, angleLines: { color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' }, pointLabels: { color: isDark ? '#AEAEB2' : '#1C1C1E', font: { size: 10, weight: '600' } }, ticks: { color: '#8E8E93', backdropColor: 'transparent', stepSize: 4 } } }, plugins: { legend: { labels: { color: isDark ? '#AEAEB2' : '#1C1C1E', boxWidth: 12, font: { size: 12 } } } } } }); 
         }
 
         function renderBarChart(labels, datasets) { 
             const ctx = document.getElementById('mainChart').getContext('2d'); if (globalChart) globalChart.destroy(); 
             const isDark = isEffectivelyDark();
-            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
-            const labelColor = isDark ? '#AEAEB2' : '#1C1C1E';
-            globalChart = new Chart(ctx, { 
-                type: 'bar', data: { labels, datasets }, 
-                options: { 
-                    responsive: true, maintainAspectRatio: false, 
-                    scales: { 
-                        x: { ticks: { color: labelColor }, grid: { display: false } }, 
-                        y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: gridColor } } 
-                    }, 
-                    plugins: { legend: { display: datasets.length > 1, labels: { color: labelColor } } } 
-                } 
-            }); 
+            globalChart = new Chart(ctx, { type: 'bar', data: { labels, datasets }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: isDark ? '#AEAEB2' : '#1C1C1E' }, grid: { display: false } }, y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)' } } }, plugins: { legend: { display: datasets.length > 1, labels: { color: isDark ? '#AEAEB2' : '#1C1C1E' } } } } }); 
         }
 
-        function handleResize() {
-            if (window.innerWidth <= 1024) {
-                document.body.classList.add('sidebar-hidden');
-            } else {
-                document.body.classList.remove('sidebar-hidden');
-            }
-            adjustTitleSize(); 
-        }
+        function handleResize() { if (window.innerWidth <= 1024) { document.body.classList.add('sidebar-hidden'); } else { document.body.classList.remove('sidebar-hidden'); } adjustTitleSize(); }
+        let resizeTimer; window.addEventListener('resize', () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(() => { handleResize(); renderMainContent(); }, 100); });
 
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                handleResize();
-                renderMainContent(); 
-            }, 100);
-        });
-
-        function init() {
+        // Appelée uniquement quand l'utilisateur est connecté
+        function initApp() {
             try { 
-                const saved = localStorage.getItem('apple_notes_db_v6'); 
+                const saved = localStorage.getItem(`apple_notes_db_v6_${currentUser.uid}`); 
                 if (saved) db = JSON.parse(saved); 
                 else db = JSON.parse(JSON.stringify(defaultData)); 
-            } catch(e) { 
-                db = JSON.parse(JSON.stringify(defaultData)); 
-            }
+            } catch(e) { db = JSON.parse(JSON.stringify(defaultData)); }
             
             applyTheme();
+            if (Object.keys(db.years).length > 0) { currentYear = Object.keys(db.years)[0]; let pages = Object.keys(db.years[currentYear]); if (pages.length > 0) currentPage = pages[0]; }
+            pushHistory(); checkDataConsistency(); activeView = 'accueil'; renderSidebar(); renderMainContent(); handleResize();
 
-            if (Object.keys(db.years).length > 0) {
-                currentYear = Object.keys(db.years)[0];
-                let pages = Object.keys(db.years[currentYear]);
-                if (pages.length > 0) currentPage = pages[0];
-            }
-
-            pushHistory(); 
-            checkDataConsistency(); 
-            activeView = 'accueil'; 
-            renderSidebar(); 
-            renderMainContent();
-            handleResize();
-
-            // ÉCOUTE DU CLOUD EN TEMPS RÉEL
+            // ÉCOUTE DU CLOUD EN TEMPS RÉEL (Spécifique à l'utilisateur connecté)
             userDocRef.on('value', (snapshot) => {
                 if (snapshot.exists()) {
                     const cloudData = snapshot.val();
-                    const localDataStr = JSON.stringify(db);
-                    const cloudDataStr = JSON.stringify(cloudData);
-                    
-                    if (localDataStr !== cloudDataStr) {
+                    if (JSON.stringify(db) !== JSON.stringify(cloudData)) {
                         db = cloudData;
-                        localStorage.setItem('apple_notes_db_v6', JSON.stringify(db));
-                        checkDataConsistency();
-                        renderSidebar();
-                        renderMainContent();
+                        localStorage.setItem(`apple_notes_db_v6_${currentUser.uid}`, JSON.stringify(db));
+                        checkDataConsistency(); renderSidebar(); renderMainContent();
                     }
                 } else if (Object.keys(db.years).length > 0) {
                     save(true);
                 }
             });
         }
-
-        document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
