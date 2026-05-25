@@ -473,16 +473,24 @@
     <script>
         const svgTrash = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
-        // === CONFIGURATION FIREBASE ===
-        const firebaseConfig = {
-            apiKey: "AIzaSyCI2ESfSMw5QhH-WLZ2HYwDwMeoAmuRxfw",
-            authDomain: "notes-fbc4f.firebaseapp.com",
-            databaseURL: "https://notes-fbc4f-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "notes-fbc4f",
-            storageBucket: "notes-fbc4f.firebasestorage.app",
-            messagingSenderId: "209998517004",
-            appId: "1:209998517004:web:cbbfc38064150e98d32f29"
-        };
+       // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyCI2ESfSMw5QhH-WlZ2HYwDwMeoAmuRxfw",
+  authDomain: "notes-fbc4f.firebaseapp.com",
+  databaseURL: "https://notes-fbc4f-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "notes-fbc4f",
+  storageBucket: "notes-fbc4f.firebasestorage.app",
+  messagingSenderId: "209998517004",
+  appId: "1:209998517004:web:cbbfc38064150e98d32f29"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
         
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
