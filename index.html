@@ -546,18 +546,22 @@
             });
         }
 
-        function register() {
-            const email = document.getElementById('auth-email').value;
-            const pwd = document.getElementById('auth-password').value;
-            const err = document.getElementById('error-msg');
-            
-            if(pwd.length < 6) { err.innerText = "Le mot de passe doit faire 6 caractères mini."; return; }
-            err.innerText = "Création du compte...";
-            
-            auth.createUserWithEmailAndPassword(email, pwd).catch(error => {
-                err.innerText = "Erreur: Ce compte existe déjà ou l'email est invalide.";
-            });
-        }
+       function register() {
+    const email = document.getElementById('auth-email').value;
+    const pwd = document.getElementById('auth-password').value;
+    const err = document.getElementById('error-msg');
+    
+    auth.createUserWithEmailAndPassword(email, pwd)
+    .then(() => {
+        err.innerText = "Compte créé !";
+    })
+    .catch(error => {
+        // Affiche l'erreur technique dans la console
+        console.error("Erreur Firebase:", error.code, error.message);
+        // Affiche l'erreur à l'utilisateur
+        err.innerText = "Erreur: " + error.message;
+    });
+}
 
         function logout() {
             closeSettings();
