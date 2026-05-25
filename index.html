@@ -209,7 +209,7 @@
             cursor: pointer; transition: all 0.2s ease; border: none; user-select: none; gap: 6px;
         }
 
-        /* --- DA Bouton Simulation (Œil / Oeil Barré) --- */
+        /* --- DA Bouton Simulation --- */
         .sim-toggle-pill { background-color: var(--system-gray6); color: var(--txt-secondaire); }
         .sim-toggle-pill.active { background-color: rgba(175, 82, 222, 0.12); color: var(--system-purple); }
         .sim-toggle-pill:hover { opacity: 0.8; }
@@ -218,7 +218,7 @@
         .sim-toggle-pill.active .icon-sim-on { display: inline-block; }
         .sim-toggle-pill.active .icon-sim-off { display: none; }
 
-        /* --- DA Bouton Modifier (Crayon / Check) --- */
+        /* --- DA Bouton Modifier --- */
         .edit-toggle-pill { background-color: rgba(0, 122, 255, 0.1); color: var(--system-blue); }
         .edit-toggle-pill.active { background-color: var(--system-blue); color: #fff; }
         .edit-toggle-pill .icon-edit-on { display: none; }
@@ -896,8 +896,17 @@
             const vInput = document.getElementById(`v-${id}`); const cInput = document.getElementById(`c-${id}`);
             const v = parseFloat(vInput.value.replace(',','.')); const c = parseFloat(cInput.value.replace(',','.'));
             if (isNaN(v) || v < 0 || v > 20 || isNaN(c) || c <= 0) { showCustomAlert("Saisie invalide", "Veuillez entrer des valeurs valides."); return; }
-            let arr = (subIdx !== null) ? db.years[currentYear][currentPage][sIdx].subSubjects[subIdx].notes : db.years[currentYear][currentPage][sIdx].notes;
-            arr.push({ val: v, coef: c, sim: document.getElementById(`s-${id}`).checked }); 
+            
+            let target = db.years[currentYear][currentPage][sIdx];
+            
+            if (subIdx !== null) {
+                if (!target.subSubjects[subIdx].notes) target.subSubjects[subIdx].notes = [];
+                target.subSubjects[subIdx].notes.push({ val: v, coef: c, sim: document.getElementById(`s-${id}`).checked });
+            } else {
+                if (!target.notes) target.notes = [];
+                target.notes.push({ val: v, coef: c, sim: document.getElementById(`s-${id}`).checked });
+            }
+            
             vInput.value = ''; cInput.value = ''; document.getElementById(`s-${id}`).checked = false;
             openSubjects.add(sIdx.toString()); save(); renderMainContent();
         }
@@ -922,19 +931,32 @@
             const nameInput = document.getElementById('add-sub-name'); const coefInput = document.getElementById('add-sub-coef');
             const name = nameInput.value; const coef = parseFloat(coefInput.value);
             if(!name || isNaN(coef) || coef <= 0) { showCustomAlert("Informations manquantes", "Veuillez spécifier le nom et le coefficient."); return; }
+            
             let newSub = { name, coef, appreciation: "" };
             if(document.getElementById('add-sub-isnest').checked) newSub.subSubjects = []; else newSub.notes = [];
+            
+            if (!db.years[currentYear][currentPage]) db.years[currentYear][currentPage] = [];
+            
             db.years[currentYear][currentPage].push(newSub); 
             nameInput.value = ''; coefInput.value = ''; document.getElementById('add-sub-isnest').checked = false;
             save(); renderMainContent();
         }
+
         function deleteSubject(sIdx) { 
             if(!checkEditGuard()) return;
             showCustomConfirm("Supprimer la matière", "Voulez-vous supprimer définitivement cette matière ?", () => {
                 db.years[currentYear][currentPage].splice(sIdx, 1); openSubjects.delete(sIdx.toString()); save(); renderMainContent(); 
             }, true);
         }
-        function addSubSubject(sIdx) { if(!checkEditGuard()) return; db.years[currentYear][currentPage][sIdx].subSubjects.push({ name: "Matière", coef: 1, notes: [] }); openSubjects.add(sIdx.toString()); save(); renderMainContent(); }
+        
+        function addSubSubject(sIdx) { 
+            if(!checkEditGuard()) return; 
+            let target = db.years[currentYear][currentPage][sIdx];
+            if (!target.subSubjects) target.subSubjects = []; 
+            target.subSubjects.push({ name: "Matière", coef: 1, notes: [] }); 
+            openSubjects.add(sIdx.toString()); save(); renderMainContent(); 
+        }
+
         function deleteSubSubject(sIdx, subIdx) { 
             if(!checkEditGuard()) return;
             showCustomConfirm("Supprimer la sous-matière", "Voulez-vous supprimer cette sous-matière ?", () => {
