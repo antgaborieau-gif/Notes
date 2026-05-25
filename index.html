@@ -105,9 +105,14 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
+        body, button, a, div {
+            /* Supprime le flash de clic natif sur iOS/Android */
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body { 
             display: flex; 
-            height: 100vh; height: 100dvh; /* Double déclaration pour rétrocompatibilité + DVH */
+            height: 100vh; height: 100dvh; 
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; 
             background-color: var(--bg-cahier); 
@@ -189,7 +194,6 @@
             white-space: nowrap; 
         }
         
-        /* Retrait de l'ellipsis CSS pour privilégier notre JS intelligent */
         .title-text-ellipsis { white-space: nowrap; overflow: hidden; display: inline-block; }
 
         .sidebar-toggle-btn {
@@ -257,7 +261,7 @@
         }
         .chart-container canvas { max-width: 100%; max-height: 100%; }
 
-        /* --- ANIMATION ILLUSION OPTIQUE iOS POUR LE TOGGLE GRAPHIQUE --- */
+        /* --- CUSTOM APPLE TOGGLE SWITCH (GRAPHIQUES) --- */
         .custom-apple-toggle {
             position: absolute;
             top: 12px;
@@ -288,7 +292,7 @@
         }
 
         .custom-apple-toggle .toggle-thumb {
-            position: relative; /* Indispensable pour centrer les icônes absolues */
+            position: relative; 
             width: 26px;
             height: 26px;
             border-radius: 50%;
@@ -315,19 +319,16 @@
 
         .custom-apple-toggle.bar-mode .toggle-thumb { transform: translateX(24px); }
         
-        /* Les deux icônes se superposent et s'animent fluidement */
         .custom-apple-toggle .toggle-thumb svg {
             position: absolute;
             top: 50%; left: 50%;
-            margin-top: -7px; margin-left: -7px; /* Centrage exact pour un SVG de 14x14 */
+            margin-top: -7px; margin-left: -7px; 
             transition: all 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        /* État normal (Radar visible) */
         .custom-apple-toggle:not(.bar-mode) .icon-radar { opacity: 1; transform: scale(1) rotate(0deg); }
         .custom-apple-toggle:not(.bar-mode) .icon-bar { opacity: 0; transform: scale(0.3) rotate(-45deg); pointer-events: none;}
         
-        /* État Bar mode (Barres visibles) */
         .custom-apple-toggle.bar-mode .icon-radar { opacity: 0; transform: scale(0.3) rotate(45deg); pointer-events: none;}
         .custom-apple-toggle.bar-mode .icon-bar { opacity: 1; transform: scale(1) rotate(0deg); }
 
@@ -604,7 +605,7 @@
         let openYears = { "Année 1": true }; let openSubjects = new Set(); 
         
         let currentThemeState = localStorage.getItem('apple_notes_theme_v5') || 'system';
-        let currentChartMode = 'radar'; // 'radar' ou 'bar'
+        let currentChartMode = 'bar'; // Graphique à bâtons par défaut
 
         // === FONCTION D'ABRÉVIATION INTELLIGENTE ===
         function getShortName(str) {
@@ -614,15 +615,13 @@
         // Calcule si le titre déborde et l'abrège si nécessaire
         function adjustTitleSize() {
             const titleSpan = document.getElementById('dynamic-page-title');
-            if (!titleSpan || isEditMode) return; // Jamais abréger en mode édition pour ne pas gêner la frappe
+            if (!titleSpan || isEditMode) return; 
             
             const fullText = titleSpan.getAttribute('data-fulltext');
             if (!fullText) return;
 
-            // Remettre le texte complet temporairement pour mesurer sa vraie taille
             titleSpan.innerText = fullText;
             
-            // Si la largeur requise (scrollWidth) est supérieure à la largeur dispo (clientWidth) (+ petite marge de sécurité)
             if (titleSpan.scrollWidth > titleSpan.clientWidth + 2) {
                 titleSpan.innerText = getShortName(fullText);
             }
@@ -732,9 +731,11 @@
         }
 
         let chartToggleTimeout;
+        let isTogglingChart = false;
+        
         function toggleChartType(btn) {
-            if (btn && btn.disabled) return;
-            if (btn) btn.disabled = true; 
+            if (isTogglingChart) return;
+            isTogglingChart = true;
 
             if (btn) {
                 btn.classList.toggle('bar-mode');
@@ -745,6 +746,7 @@
             clearTimeout(chartToggleTimeout);
             chartToggleTimeout = setTimeout(() => {
                 renderMainContent();
+                isTogglingChart = false;
             }, 300);
         }
 
@@ -997,7 +999,6 @@
             if (activeView === 'page') {
                 const pageAvg = calcPageAvg(db.years[currentYear][currentPage]);
                 
-                // Utilisation du span dynamic-page-title pour notre script d'abréviation intelligente
                 title.innerHTML = `
                     <span id="dynamic-page-title" class="${isEditMode ? 'editable-text' : ''} title-text-ellipsis" contenteditable="${isEditMode}" data-fulltext="${currentPage}" onblur="updatePageName('${currentPage}', this)" onkeydown="handleEditableKeydown(event, this)">${currentPage}</span>
                     <button class="icon-btn danger-zone edit-only" style="flex-shrink: 0;" onclick="deletePage()">${svgTrash}</button>
@@ -1258,7 +1259,7 @@
             } else {
                 document.body.classList.remove('sidebar-hidden');
             }
-            adjustTitleSize(); // Exécute notre script d'abréviation lors des redimensionnements
+            adjustTitleSize(); 
         }
 
         let resizeTimer;
