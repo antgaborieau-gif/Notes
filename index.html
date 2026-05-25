@@ -629,6 +629,18 @@
 
         function checkDataConsistency() {
             if (!db || !db.years) { db = JSON.parse(JSON.stringify(defaultData)); }
+            
+            // CORRECTION : On reconstruit les tableaux vides purgés par Firebase
+            for (let y in db.years) {
+                for (let p in db.years[y]) {
+                    if (Array.isArray(db.years[y][p])) {
+                        db.years[y][p].forEach(sub => {
+                            if (sub.isNested && !sub.subSubjects) sub.subSubjects = [];
+                        });
+                    }
+                }
+            }
+
             const yearKeys = Object.keys(db.years);
             if (yearKeys.length === 0) { activeView = 'accueil'; currentYear = null; currentPage = null; return; }
             if (!currentYear || !db.years[currentYear]) { currentYear = yearKeys[0]; }
@@ -982,8 +994,10 @@
             const name = nameInput.value; const coef = parseFloat(coefInput.value);
             if(!name || isNaN(coef) || coef <= 0) { showCustomAlert("Informations manquantes", "Veuillez spécifier le nom et le coefficient."); return; }
             
-            let newSub = { name, coef, appreciation: "" };
-            if(document.getElementById('add-sub-isnest').checked) newSub.subSubjects = []; else newSub.notes = [];
+            // CORRECTION : On enregistre si c'est une matière imbriquée avec un flag "isNested"
+            let isNested = document.getElementById('add-sub-isnest').checked;
+            let newSub = { name, coef, appreciation: "", isNested: isNested };
+            if (isNested) newSub.subSubjects = []; else newSub.notes = [];
             
             if (!db.years[currentYear][currentPage]) db.years[currentYear][currentPage] = [];
             
@@ -1010,7 +1024,10 @@
         function deleteSubSubject(sIdx, subIdx) { 
             if(!checkEditGuard()) return;
             showCustomConfirm("Supprimer la sous-matière", "Voulez-vous supprimer cette sous-matière ?", () => {
-                db.years[currentYear][currentPage][sIdx].subSubjects.splice(subIdx, 1); openSubjects.add(sIdx.toString()); save(); renderMainContent(); 
+                let target = db.years[currentYear][currentPage][sIdx];
+                target.isNested = true; // CORRECTION : On s'assure qu'elle garde son statut
+                target.subSubjects.splice(subIdx, 1); 
+                openSubjects.add(sIdx.toString()); save(); renderMainContent(); 
             }, true);
         }
 
@@ -1108,18 +1125,20 @@
                                     <div style="flex:1"><strong>Appréciation :</strong><span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('appreciation', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${subject.appreciation || (isEditMode ? 'Ajouter un commentaire...' : '-')}</span></div>
                                 </div>`;
 
-                    if (subject.subSubjects) {
-                        subject.subSubjects.forEach((sub, subIdx) => {
-                            const subAvgVal = calcNotesAvg(sub.notes);
-                            viewHtml += `
-                                <div class="sub-subject">
-                                    <div class="sub-subject-header">
-                                        <div>↳ <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubSubjectField('name', '${sIdx}', '${subIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${sub.name}</span> <span style="font-size:13px; font-weight:normal; color:var(--txt-secondaire)">(Coef: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubSubjectField('coef', '${sIdx}', '${subIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${sub.coef}</span>)</span></div>
-                                        <div style="display:flex; gap:10px; align-items:center;"><span class="${getTextClass(subAvgVal)} font-weight-bold">${formatVal(subAvgVal)}</span><button class="icon-btn danger-zone edit-only" onclick="deleteSubSubject('${sIdx}', '${subIdx}')">${svgTrash}</button></div>
-                                    </div>
-                                    <div class="notes-area">${buildNotesRows(sub.notes, sIdx, subIdx)}</div>${buildAddNoteRow(sIdx, subIdx)}
-                                </div>`;
-                        });
+                    if (subject.subSubjects || subject.isNested) { // CORRECTION ICI AUSSI
+                        if (subject.subSubjects) {
+                            subject.subSubjects.forEach((sub, subIdx) => {
+                                const subAvgVal = calcNotesAvg(sub.notes);
+                                viewHtml += `
+                                    <div class="sub-subject">
+                                        <div class="sub-subject-header">
+                                            <div>↳ <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubSubjectField('name', '${sIdx}', '${subIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${sub.name}</span> <span style="font-size:13px; font-weight:normal; color:var(--txt-secondaire)">(Coef: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubSubjectField('coef', '${sIdx}', '${subIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${sub.coef}</span>)</span></div>
+                                            <div style="display:flex; gap:10px; align-items:center;"><span class="${getTextClass(subAvgVal)} font-weight-bold">${formatVal(subAvgVal)}</span><button class="icon-btn danger-zone edit-only" onclick="deleteSubSubject('${sIdx}', '${subIdx}')">${svgTrash}</button></div>
+                                        </div>
+                                        <div class="notes-area">${buildNotesRows(sub.notes, sIdx, subIdx)}</div>${buildAddNoteRow(sIdx, subIdx)}
+                                    </div>`;
+                            });
+                        }
                         viewHtml += `<div class="edit-only-block" style="padding: 10px 20px;"><button class="btn-action" onclick="addSubSubject('${sIdx}')">+ Sous-matière</button></div>`;
                     } else { 
                         viewHtml += `<div class="notes-area">${buildNotesRows(subject.notes, sIdx, null)}</div>${buildAddNoteRow(sIdx, null)}`; 
