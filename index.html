@@ -336,11 +336,26 @@
         .welcome-card h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
         .welcome-card p { font-size: 14px; color: var(--txt-secondaire); }
 
+        /* --- STYLES DES MATIERES ET SOUS-MATIERES --- */
         .list-container { display: flex; flex-direction: column; gap: 20px; }
-        .list-card { background: var(--bg-feuillet); border-radius: 16px; overflow: hidden; border: 1px solid var(--separator); position: relative; padding-left: 20px;}
+        .list-card { background: var(--bg-feuillet); border-radius: 16px; overflow: hidden; border: 1px solid var(--separator); position: relative; padding-left: 20px; transition: all 0.3s ease; }
         .list-card::before {
             content: ''; position: absolute; top: 0; left: 0; width: 20px; height: 100%; background-color: var(--bg-reliure-strip); border-right: 1px solid var(--border-reliure);
             background-image: repeating-linear-gradient(0deg, var(--color-reliure-line) 0px, var(--color-reliure-line) 1px, transparent 1px, transparent 15px);
+            transition: all 0.3s ease;
+        }
+
+        /* --- INDICATEURS VISUELS DE SIMULATION --- */
+        .list-card.has-simulation::before {
+            background-color: rgba(175, 82, 222, 0.12); /* Fond violet subtil */
+            border-right-color: var(--system-purple); /* Bordure droite violette */
+            background-image: repeating-linear-gradient(0deg, rgba(175, 82, 222, 0.25) 0px, rgba(175, 82, 222, 0.25) 1px, transparent 1px, transparent 15px); /* Quadrillage violet */
+        }
+        
+        .sub-subject { border-top: 1px solid var(--separator); transition: all 0.3s ease; }
+        .sub-subject.has-simulation .sub-subject-header {
+            box-shadow: inset 4px 0 0 var(--system-purple); /* Liseré violet à gauche */
+            background-color: rgba(175, 82, 222, 0.05); /* Léger fond violet */
         }
         
         .list-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
@@ -354,8 +369,7 @@
         .appreciation-box { padding: 12px 20px; font-style: italic; color: var(--txt-secondaire); font-size: 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--separator); border-bottom: 1px solid var(--separator);}
         .appreciation-box strong { color: var(--txt-primaire); font-weight: 600; font-style: normal; margin-right: 5px;}
 
-        .sub-subject { border-top: 1px solid var(--separator); }
-        .sub-subject-header { padding: 12px 20px; font-weight: 600; font-size: 15px; color: var(--txt-primaire); display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sub-subject);}
+        .sub-subject-header { padding: 12px 20px; font-weight: 600; font-size: 15px; color: var(--txt-primaire); display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sub-subject); transition: all 0.3s ease;}
 
         .notes-area { background: var(--bg-feuillet); }
         .note-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin: 0 20px; border-bottom: 1px solid rgba(0,0,0,0.03); opacity: 1; }
@@ -607,6 +621,15 @@
         let currentThemeState = localStorage.getItem('apple_notes_theme_v5') || 'system';
         let currentChartMode = 'bar'; // Graphique à bâtons par défaut
 
+        // === FONCTION DE DETECTION DES SIMULATIONS ===
+        function hasSimulatedNotes(subject) {
+            if (subject.notes && subject.notes.some(n => n.sim)) return true;
+            if (subject.subSubjects) {
+                return subject.subSubjects.some(sub => sub.notes && sub.notes.some(n => n.sim));
+            }
+            return false;
+        }
+
         // === FONCTION D'ABRÉVIATION INTELLIGENTE ===
         function getShortName(str) {
             return str.replace(/Année\s*/gi, 'A').replace(/Semestre\s*/gi, 'S');
@@ -630,7 +653,6 @@
         function checkDataConsistency() {
             if (!db || !db.years) { db = JSON.parse(JSON.stringify(defaultData)); }
             
-            // CORRECTION : On reconstruit les tableaux vides purgés par Firebase
             for (let y in db.years) {
                 for (let p in db.years[y]) {
                     if (Array.isArray(db.years[y][p])) {
@@ -792,12 +814,10 @@
             const modal = document.getElementById('custom-modal');
             const isModalOpen = modal.classList.contains('show');
 
-            // --- 1. Gestion des modales (Fenêtres de confirmation/alerte) ---
             if (isModalOpen) {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     const confirmBtn = document.getElementById('modal-confirm-btn');
-                    // S'il y a un bouton de confirmation (Confirm), on clique dessus. Sinon on ferme (Alert).
                     if (confirmBtn) confirmBtn.click();
                     else closeCustomModal();
                     return;
@@ -809,13 +829,11 @@
                 }
             }
 
-            // --- 2. Gestion de la touche Echap globale ---
             if (e.key === 'Escape') {
-                if (isTyping) activeElem.blur(); // Quitte le champ de texte
+                if (isTyping) activeElem.blur();
                 return;
             }
 
-            // --- 3. Raccourcis globaux (Uniquement si on ne tape pas de texte) ---
             if (!isTyping && !isModalOpen) {
                 const key = e.key.toLowerCase();
                 
@@ -825,7 +843,6 @@
                 }
                 if (key === 's') {
                     e.preventDefault();
-                    // On ne peut activer les simulations que si on n'est pas sur la page d'accueil
                     if (activeView !== 'accueil') toggleGlobalSimulationBtn();
                 }
                 if (key === 'm') {
@@ -838,9 +855,8 @@
                 }
             }
 
-            // --- 4. Historique (Ctrl+Z / Cmd+Z) ---
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-                if (isTyping) return; // On laisse le navigateur gérer le Ctrl+Z natif du texte
+                if (isTyping) return; 
                 e.preventDefault();
                 if (e.shiftKey) redo(); else undo();
             }
@@ -994,7 +1010,6 @@
             const name = nameInput.value; const coef = parseFloat(coefInput.value);
             if(!name || isNaN(coef) || coef <= 0) { showCustomAlert("Informations manquantes", "Veuillez spécifier le nom et le coefficient."); return; }
             
-            // CORRECTION : On enregistre si c'est une matière imbriquée avec un flag "isNested"
             let isNested = document.getElementById('add-sub-isnest').checked;
             let newSub = { name, coef, appreciation: "", isNested: isNested };
             if (isNested) newSub.subSubjects = []; else newSub.notes = [];
@@ -1025,7 +1040,7 @@
             if(!checkEditGuard()) return;
             showCustomConfirm("Supprimer la sous-matière", "Voulez-vous supprimer cette sous-matière ?", () => {
                 let target = db.years[currentYear][currentPage][sIdx];
-                target.isNested = true; // CORRECTION : On s'assure qu'elle garde son statut
+                target.isNested = true;
                 target.subSubjects.splice(subIdx, 1); 
                 openSubjects.add(sIdx.toString()); save(); renderMainContent(); 
             }, true);
@@ -1110,10 +1125,14 @@
                     dataVals.push(subAvg !== null ? parseFloat(subAvg.toFixed(2)) : 0);
                     const isSubjectOpen = openSubjects.has(sIdx.toString());
 
+                    // --- DETECTE SI LA MATIERE GLOBALE CONTIENT DES SIMULATIONS ---
+                    const hasSim = hasSimulatedNotes(subject);
+                    const cardSimClass = (includeSimulations && hasSim) ? 'has-simulation' : '';
+
                     viewHtml += `
-                        <div class="list-card">
+                        <div class="list-card ${cardSimClass}">
                             <div class="list-header" onclick="toggleSubject('${sIdx}')">
-                                <div class="subject-title-area">
+                                <div class="subject-title-area" style="flex-wrap: wrap; align-items: center;">
                                     <h3 class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onclick="preventAccordion(event)" onblur="updateSubjectField('name', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${subject.name}</h3>
                                     <small>Coef: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onclick="preventAccordion(event)" onblur="updateSubjectField('coef', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${subject.coef}</span></small>
                                     <button class="icon-btn danger-zone edit-only" onclick="deleteSubject('${sIdx}'); event.stopPropagation();">${svgTrash}</button>
@@ -1125,14 +1144,22 @@
                                     <div style="flex:1"><strong>Appréciation :</strong><span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('appreciation', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${subject.appreciation || (isEditMode ? 'Ajouter un commentaire...' : '-')}</span></div>
                                 </div>`;
 
-                    if (subject.subSubjects || subject.isNested) { // CORRECTION ICI AUSSI
+                    if (subject.subSubjects || subject.isNested) { 
                         if (subject.subSubjects) {
                             subject.subSubjects.forEach((sub, subIdx) => {
                                 const subAvgVal = calcNotesAvg(sub.notes);
+
+                                // --- DETECTE SI LA SOUS-MATIERE CONTIENT DES SIMULATIONS ---
+                                const subHasSim = sub.notes && sub.notes.some(n => n.sim);
+                                const subSimClass = (includeSimulations && subHasSim) ? 'has-simulation' : '';
+
                                 viewHtml += `
-                                    <div class="sub-subject">
+                                    <div class="sub-subject ${subSimClass}">
                                         <div class="sub-subject-header">
-                                            <div>↳ <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubSubjectField('name', '${sIdx}', '${subIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${sub.name}</span> <span style="font-size:13px; font-weight:normal; color:var(--txt-secondaire)">(Coef: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubSubjectField('coef', '${sIdx}', '${subIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${sub.coef}</span>)</span></div>
+                                            <div style="display:flex; align-items:center; flex-wrap:wrap; gap:5px;">
+                                                ↳ <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubSubjectField('name', '${sIdx}', '${subIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${sub.name}</span> 
+                                                <span style="font-size:13px; font-weight:normal; color:var(--txt-secondaire)">(Coef: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubSubjectField('coef', '${sIdx}', '${subIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${sub.coef}</span>)</span>
+                                            </div>
                                             <div style="display:flex; gap:10px; align-items:center;"><span class="${getTextClass(subAvgVal)} font-weight-bold">${formatVal(subAvgVal)}</span><button class="icon-btn danger-zone edit-only" onclick="deleteSubSubject('${sIdx}', '${subIdx}')">${svgTrash}</button></div>
                                         </div>
                                         <div class="notes-area">${buildNotesRows(sub.notes, sIdx, subIdx)}</div>${buildAddNoteRow(sIdx, subIdx)}
