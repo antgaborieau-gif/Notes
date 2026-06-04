@@ -621,13 +621,21 @@
         let currentThemeState = localStorage.getItem('apple_notes_theme_v5') || 'system';
         let currentChartMode = 'bar'; // Graphique à bâtons par défaut
 
-        // === FONCTION DE DETECTION DES SIMULATIONS ===
+        // === FONCTIONS DE DETECTION DES SIMULATIONS ===
         function hasSimulatedNotes(subject) {
             if (subject.notes && subject.notes.some(n => n.sim)) return true;
             if (subject.subSubjects) {
                 return subject.subSubjects.some(sub => sub.notes && sub.notes.some(n => n.sim));
             }
             return false;
+        }
+        function hasPageSimulatedNotes(pageData) {
+            if (!pageData) return false;
+            return pageData.some(sub => hasSimulatedNotes(sub));
+        }
+        function hasYearSimulatedNotes(yearData) {
+            if (!yearData) return false;
+            return Object.values(yearData).some(page => hasPageSimulatedNotes(page));
         }
 
         // === FONCTION D'ABRÉVIATION INTELLIGENTE ===
@@ -1110,7 +1118,7 @@
                 `;
                 
                 const pageData = db.years[currentYear][currentPage] || [];
-                let labels = [], dataVals = [];
+                let labels = [], dataVals = [], bgColors = [], pointColors = [];
                 
                 let viewHtml = `
                     <div class="chart-container" style="margin-bottom: 30px;">
@@ -1127,7 +1135,17 @@
 
                     // --- DETECTE SI LA MATIERE GLOBALE CONTIENT DES SIMULATIONS ---
                     const hasSim = hasSimulatedNotes(subject);
-                    const cardSimClass = (includeSimulations && hasSim) ? 'has-simulation' : '';
+                    const isSimActive = includeSimulations && hasSim;
+                    const cardSimClass = isSimActive ? 'has-simulation' : '';
+                    
+                    // --- GESTION DES COULEURS DU GRAPHIQUE ---
+                    if (isSimActive) {
+                        bgColors.push('#AF52DE');
+                        pointColors.push('#AF52DE');
+                    } else {
+                        bgColors.push('#007AFF');
+                        pointColors.push('#007AFF');
+                    }
 
                     viewHtml += `
                         <div class="list-card ${cardSimClass}">
@@ -1179,8 +1197,12 @@
                 const datasetOptions = [{ 
                     label: currentPage, 
                     data: dataVals, 
-                    borderColor: '#007AFF', 
-                    backgroundColor: currentChartMode === 'bar' ? '#007AFF' : 'rgba(0, 122, 255, 0.05)',
+                    borderColor: currentChartMode === 'bar' ? bgColors : '#007AFF', 
+                    backgroundColor: currentChartMode === 'bar' ? bgColors : 'rgba(0, 122, 255, 0.05)',
+                    pointBackgroundColor: pointColors,
+                    pointBorderColor: pointColors,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                     borderRadius: currentChartMode === 'bar' ? 8 : 0
                 }];
                 if (currentChartMode === 'radar') renderRadar(labels, datasetOptions);
@@ -1209,20 +1231,37 @@
                     </div>`;
                 content.innerHTML = viewHtml;
 
-                const colors = ['#007AFF', '#34C759', '#FF9500', '#AF52DE']; let idx = 0;
+                const colors = ['#007AFF', '#34C759', '#FF9500', '#FF3B30']; // Violet remplacé par rouge dans la base pour éviter la confusion
+                let idx = 0;
                 if (db.years[currentYear]) {
                     for (let pName in db.years[currentYear]) {
-                        let d = []; 
+                        let d = [], bgColors = [], pointColors = []; 
+                        const baseColor = colors[idx%colors.length];
+
                         labels.forEach(l => { 
                             const found = db.years[currentYear][pName].find(s => s.name === l); 
                             let parsedAvg = found ? calcSubjectAvg(found) : 0;
                             d.push(parsedAvg !== null ? parseFloat(parsedAvg.toFixed(2)) : 0); 
+                            
+                            const isSimActive = includeSimulations && found && hasSimulatedNotes(found);
+                            if (isSimActive) {
+                                bgColors.push('#AF52DE');
+                                pointColors.push('#AF52DE');
+                            } else {
+                                bgColors.push(baseColor);
+                                pointColors.push(baseColor);
+                            }
                         });
+
                         datasets.push({ 
                             label: pName, 
                             data: d, 
-                            borderColor: colors[idx%colors.length], 
-                            backgroundColor: currentChartMode === 'bar' ? colors[idx%colors.length] : 'transparent',
+                            borderColor: currentChartMode === 'bar' ? bgColors : baseColor, 
+                            backgroundColor: currentChartMode === 'bar' ? bgColors : 'transparent',
+                            pointBackgroundColor: pointColors,
+                            pointBorderColor: pointColors,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
                             borderRadius: currentChartMode === 'bar' ? 8 : 0
                         }); 
                         idx++;
@@ -1234,7 +1273,7 @@
 
             } else if (activeView === 'accueil') {
                 title.innerHTML = `<span id="dynamic-page-title" class="title-text-ellipsis" data-fulltext="Accueil">Accueil</span>`;
-                let labels = [], dataVals = [];
+                let labels = [], dataVals = [], bgColors = [], pointColors = [];
                 
                 let viewHtml = `
                     <div class="welcome-card" style="margin-bottom: 20px;">
@@ -1252,6 +1291,15 @@
                     if (yAvg !== null) { 
                         sumGlobal += yAvg; countGlobal++; labels.push(yName); 
                         dataVals.push(parseFloat(yAvg.toFixed(2))); 
+                        
+                        const isSimActive = includeSimulations && hasYearSimulatedNotes(db.years[yName]);
+                        if (isSimActive) {
+                            bgColors.push('#AF52DE');
+                            pointColors.push('#AF52DE');
+                        } else {
+                            bgColors.push('#007AFF');
+                            pointColors.push('#007AFF');
+                        }
                     }
                 }
                 
@@ -1271,8 +1319,12 @@
                 const datasetOptions = [{ 
                     label: 'Moyenne', 
                     data: dataVals, 
-                    borderColor: '#007AFF',
-                    backgroundColor: currentChartMode === 'bar' ? '#007AFF' : 'rgba(0, 122, 255, 0.05)', 
+                    borderColor: currentChartMode === 'bar' ? bgColors : '#007AFF',
+                    backgroundColor: currentChartMode === 'bar' ? bgColors : 'rgba(0, 122, 255, 0.05)', 
+                    pointBackgroundColor: pointColors,
+                    pointBorderColor: pointColors,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                     borderRadius: currentChartMode === 'bar' ? 8 : 0 
                 }];
 
