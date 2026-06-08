@@ -18,7 +18,7 @@
     <style>
         /* === VARIABLES THEME CLAIR === */
         :root, body.light-theme, body.system-theme {
-            color-scheme: light; /* Force les inputs natifs en mode clair */
+            color-scheme: light;
             --system-blue: #007AFF;
             --system-green: #34C759;
             --system-orange: #FF9500;
@@ -47,7 +47,7 @@
 
         /* === VARIABLES THEME SOMBRE === */
         body.dark-theme {
-            color-scheme: dark; /* Force les inputs natifs en mode sombre */
+            color-scheme: dark;
             --system-blue: #0A84FF;
             --system-green: #30D158;
             --system-orange: #FF9F0A;
@@ -106,7 +106,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         
         body, button, a, div {
-            /* Supprime le flash de clic natif sur iOS/Android */
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -121,7 +120,6 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
 
-        /* Overlay mobile pour le menu */
         .sidebar-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh;
             background: rgba(0, 0, 0, 0.4); z-index: 90; opacity: 0;
@@ -163,13 +161,42 @@
         
         .sidebar-btn { background: none; border: none; color: var(--system-blue); padding: 7px 12px 7px 28px; cursor: pointer; font-size: 14px; font-weight: 500; text-align: left; transition: opacity 0.2s; width: 100%;}
         .sidebar-btn:hover { opacity: 0.7; }
+
+        /* --- NOUVEAUX BOUTONS D'AJOUT --- */
+        .sidebar-add-btn {
+            background-color: rgba(0, 122, 255, 0.1);
+            color: var(--system-blue);
+            border: none;
+            padding: 8px 12px;
+            margin: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            width: calc(100% - 24px);
+        }
+        .sidebar-add-btn:hover {
+            background-color: rgba(0, 122, 255, 0.15);
+        }
+        body.dark-theme .sidebar-add-btn {
+            background-color: rgba(10, 132, 255, 0.15);
+        }
+        @media (prefers-color-scheme: dark) {
+            body.system-theme .sidebar-add-btn {
+                background-color: rgba(10, 132, 255, 0.15);
+            }
+        }
         
         .sidebar-footer { padding: 12px; display: flex; gap: 8px; border-top: 1px solid var(--separator); background: var(--bg-feuillet); }
         .btn-history { flex: 1; padding: 8px; background-color: var(--system-gray6); color: var(--system-blue); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.2s; }
         .btn-history:hover { background-color: var(--separator); }
         .btn-history:disabled { color: var(--txt-secondaire); cursor: not-allowed; opacity: 0.5;}
 
-        /* Zone de contenu principale */
         .main-content {
             flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative;
             background-image: linear-gradient(var(--color-grid) 1px, transparent 1px), linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
@@ -209,7 +236,6 @@
             cursor: pointer; transition: all 0.2s ease; border: none; user-select: none; gap: 6px;
         }
 
-        /* --- DA Bouton Simulation --- */
         .sim-toggle-pill { background-color: var(--system-gray6); color: var(--txt-secondaire); }
         .sim-toggle-pill.active { background-color: rgba(175, 82, 222, 0.12); color: var(--system-purple); }
         .sim-toggle-pill:hover { opacity: 0.8; }
@@ -218,7 +244,6 @@
         .sim-toggle-pill.active .icon-sim-on { display: inline-block; }
         .sim-toggle-pill.active .icon-sim-off { display: none; }
 
-        /* --- DA Bouton Modifier --- */
         .edit-toggle-pill { background-color: rgba(0, 122, 255, 0.1); color: var(--system-blue); }
         .edit-toggle-pill.active { background-color: var(--system-blue); color: #fff; }
         .edit-toggle-pill .icon-edit-on { display: none; }
@@ -233,6 +258,9 @@
             display: inline-block; transition: all 0.2s ease; border-bottom: 1px dashed rgba(0, 122, 255, 0.3); 
         }
         body.is-editing .editable-text:focus { outline: none; background: var(--bg-feuillet); border-bottom-color: transparent; box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.15), 0 0 0 1px var(--system-blue); }
+
+        /* --- PLACEHOLDERS POUR LES CHAMPS MODIFIABLES --- */
+        .editable-text:empty::before { content: attr(data-placeholder); color: var(--txt-secondaire); opacity: 0.6; pointer-events: none; cursor: text; }
 
         .icon-btn { 
             background: none; border: none; cursor: pointer; opacity: 0.5; transition: opacity 0.2s; padding: 0; 
@@ -261,7 +289,6 @@
         }
         .chart-container canvas { max-width: 100%; max-height: 100%; }
 
-        /* --- CONTROLES GRAPHIQUES --- */
         .chart-controls {
             position: absolute;
             top: 12px;
@@ -271,7 +298,6 @@
             z-index: 10;
         }
 
-        /* --- BOUTON INFO LEGENDE --- */
         .info-btn-circle {
             width: 32px;
             height: 32px;
@@ -300,7 +326,6 @@
             }
         }
 
-        /* --- CUSTOM APPLE TOGGLE SWITCH (GRAPHIQUES) --- */
         .custom-apple-toggle {
             width: 56px;
             height: 32px;
@@ -371,7 +396,6 @@
         .welcome-card h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
         .welcome-card p { font-size: 14px; color: var(--txt-secondaire); }
 
-        /* --- STYLES DES MATIERES ET SOUS-MATIERES --- */
         .list-container { display: flex; flex-direction: column; gap: 20px; }
         .list-card { background: var(--bg-feuillet); border-radius: 16px; overflow: hidden; border: 1px solid var(--separator); position: relative; padding-left: 20px; transition: all 0.3s ease; }
         .list-card::before {
@@ -380,17 +404,16 @@
             transition: all 0.3s ease;
         }
 
-        /* --- INDICATEURS VISUELS DE SIMULATION --- */
         .list-card.has-simulation::before {
-            background-color: rgba(175, 82, 222, 0.12); /* Fond violet subtil */
-            border-right-color: var(--system-purple); /* Bordure droite violette */
-            background-image: repeating-linear-gradient(0deg, rgba(175, 82, 222, 0.25) 0px, rgba(175, 82, 222, 0.25) 1px, transparent 1px, transparent 15px); /* Quadrillage violet */
+            background-color: rgba(175, 82, 222, 0.12);
+            border-right-color: var(--system-purple);
+            background-image: repeating-linear-gradient(0deg, rgba(175, 82, 222, 0.25) 0px, rgba(175, 82, 222, 0.25) 1px, transparent 1px, transparent 15px);
         }
         
         .sub-subject { border-top: 1px solid var(--separator); transition: all 0.3s ease; }
         .sub-subject.has-simulation .sub-subject-header {
-            box-shadow: inset 4px 0 0 var(--system-purple); /* Liseré violet à gauche */
-            background-color: rgba(175, 82, 222, 0.05); /* Léger fond violet */
+            box-shadow: inset 4px 0 0 var(--system-purple);
+            background-color: rgba(175, 82, 222, 0.05);
         }
         
         .list-header { padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.2s; }
@@ -401,7 +424,6 @@
         .list-body { display: none; }
         .list-body.active { display: block; }
         
-        /* --- STATS PROMO --- */
         .promo-stats-box {
             padding: 10px 20px;
             font-size: 13px;
@@ -498,7 +520,6 @@
         .modal-btn.destructive { color: var(--system-red); font-weight: 600; }
         .modal-btn.bold { font-weight: 600; }
 
-        /* --- RESPONSIVE MOBILE / IPHONE --- */
         @media (max-width: 1024px) {
             .topbar { padding: calc(12px + env(safe-area-inset-top)) 20px 12px; min-height: 60px; }
             .topbar h1 { font-size: 24px; }
@@ -524,7 +545,6 @@
             .promo-stats-box { flex-wrap: wrap; gap: 10px; }
         }
 
-        /* --- VRAIE CORRECTION POUR MOBILE --- */
         @media (max-width: 500px) {
             .topbar { padding: 10px 12px; gap: 8px; }
             .topbar-left { gap: 6px; } 
@@ -562,7 +582,10 @@
             <h2>Mon Carnet</h2>
         </div>
         <div class="sidebar-menu" id="sidebar-navigation"></div>
-        <button class="sidebar-btn edit-only-block" onclick="addNewYear()">+ Ajouter une Année</button>
+        <button class="sidebar-add-btn edit-only-flex" onclick="addNewYear()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Ajouter une Année
+        </button>
         <div class="sidebar-footer">
             <button id="btn-undo" class="btn-history" onclick="undo()">Annuler</button>
             <button id="btn-redo" class="btn-history" onclick="redo()">Rétablir</button>
@@ -695,7 +718,6 @@
             return str.replace(/Année\s*/gi, 'A').replace(/Semestre\s*/gi, 'S');
         }
 
-        // Calcule si le titre déborde et l'abrège si nécessaire
         function adjustTitleSize() {
             const titleSpan = document.getElementById('dynamic-page-title');
             if (!titleSpan || isEditMode) return; 
@@ -1014,12 +1036,11 @@
             let sub = db.years[currentYear][currentPage][sIdx]; let val = el.innerText.trim();
             
             if (['coef', 'promoAvg', 'promoMin', 'promoMax'].includes(field)) {
-                // Gestion des champs vides pour la promo (permet d'effacer la stat)
                 if (val === '' || val === '-') {
                     if (field !== 'coef') {
                         sub[field] = null; save(); renderMainContent();
                     } else {
-                        el.innerText = sub.coef; // Le coef ne peut pas être vide
+                        el.innerText = sub.coef;
                     }
                     return;
                 }
@@ -1187,7 +1208,7 @@
                 }
                 const isBilanActive = (activeView === 'bilan_annuel' && currentYear === yName);
                 html += `<li class="page-item ${isBilanActive ? 'active' : ''}" onclick="setViewBilanAnnuel('${yName}')">Bilan Annuel</li>`;
-                html += `<button class="sidebar-btn edit-only-block" onclick="addNewPage('${yName}')">+ Nouvelle Page</button></ul></div>`;
+                html += `<button class="sidebar-add-btn edit-only-flex" onclick="addNewPage('${yName}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg> Nouvelle Page</button></ul></div>`;
             }
             container.innerHTML = html;
         }
@@ -1256,7 +1277,6 @@
                     labels.push(subject.name); 
                     dataVals.push(subAvg !== null ? parseFloat(subAvg.toFixed(2)) : null);
                     
-                    // Récupération des données Promo
                     promoAvgs.push((subject.promoAvg !== undefined && subject.promoAvg !== null) ? parseFloat(subject.promoAvg) : null);
                     if (subject.promoMin !== undefined && subject.promoMin !== null && subject.promoMax !== undefined && subject.promoMax !== null) {
                         promoMinMax.push([parseFloat(subject.promoMin), parseFloat(subject.promoMax)]);
@@ -1264,19 +1284,22 @@
                         promoMinMax.push(null);
                     }
 
+                    const promoAvgVal = (subject.promoAvg !== undefined && subject.promoAvg !== null) ? subject.promoAvg : '';
+                    const promoMinVal = (subject.promoMin !== undefined && subject.promoMin !== null) ? subject.promoMin : '';
+                    const promoMaxVal = (subject.promoMax !== undefined && subject.promoMax !== null) ? subject.promoMax : '';
+                    const appVal = subject.appreciation || '';
+
                     const isSubjectOpen = openSubjects.has(sIdx.toString());
 
-                    // --- DETECTE SI LA MATIERE GLOBALE CONTIENT DES SIMULATIONS ---
                     const hasSim = hasSimulatedNotes(subject);
                     const isSimActive = includeSimulations && hasSim;
                     const cardSimClass = isSimActive ? 'has-simulation' : '';
                     
-                    // --- GESTION DES COULEURS DU GRAPHIQUE ---
                     if (isSimActive) {
                         bgColors.push('#AF52DE');
                         pointColors.push('#AF52DE');
                     } else {
-                        const defaultCol = isEffectivelyDark() ? '#FF453A' : '#FF3B30'; // Rouge natif iOS
+                        const defaultCol = isEffectivelyDark() ? '#FF453A' : '#FF3B30'; 
                         bgColors.push(defaultCol);
                         pointColors.push(defaultCol);
                     }
@@ -1293,12 +1316,12 @@
                             </div>
                             <div id="body-${sIdx}" class="list-body ${isSubjectOpen ? 'active' : ''}">
                                 <div class="promo-stats-box">
-                                    <div class="promo-stat-item">Moyenne promo: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('promoAvg', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${(subject.promoAvg !== undefined && subject.promoAvg !== null) ? subject.promoAvg : '-'}</span></div>
-                                    <div class="promo-stat-item">Min: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('promoMin', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${(subject.promoMin !== undefined && subject.promoMin !== null) ? subject.promoMin : '-'}</span></div>
-                                    <div class="promo-stat-item">Max: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('promoMax', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${(subject.promoMax !== undefined && subject.promoMax !== null) ? subject.promoMax : '-'}</span></div>
+                                    <div class="promo-stat-item">Moyenne promo: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" data-placeholder="-" onblur="updateSubjectField('promoAvg', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${isEditMode ? promoAvgVal : (promoAvgVal !== '' ? promoAvgVal : '-')}</span></div>
+                                    <div class="promo-stat-item">Min: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" data-placeholder="-" onblur="updateSubjectField('promoMin', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${isEditMode ? promoMinVal : (promoMinVal !== '' ? promoMinVal : '-')}</span></div>
+                                    <div class="promo-stat-item">Max: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" data-placeholder="-" onblur="updateSubjectField('promoMax', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${isEditMode ? promoMaxVal : (promoMaxVal !== '' ? promoMaxVal : '-')}</span></div>
                                 </div>
                                 <div class="appreciation-box">
-                                    <div style="flex:1"><strong>Appréciation :</strong><span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('appreciation', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${subject.appreciation || (isEditMode ? 'Ajouter un commentaire...' : '-')}</span></div>
+                                    <div style="flex:1"><strong>Appréciation :</strong><span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" data-placeholder="Ajouter un commentaire..." onblur="updateSubjectField('appreciation', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${isEditMode ? appVal : (appVal !== '' ? appVal : '-')}</span></div>
                                 </div>`;
 
                     if (subject.subSubjects || subject.isNested) { 
@@ -1306,7 +1329,6 @@
                             subject.subSubjects.forEach((sub, subIdx) => {
                                 const subAvgVal = calcNotesAvg(sub.notes);
 
-                                // --- DETECTE SI LA SOUS-MATIERE CONTIENT DES SIMULATIONS ---
                                 const subHasSim = sub.notes && sub.notes.some(n => n.sim);
                                 const subSimClass = (includeSimulations && subHasSim) ? 'has-simulation' : '';
 
@@ -1368,7 +1390,7 @@
                     </div>`;
                 content.innerHTML = viewHtml;
 
-                const colors = ['#007AFF', '#34C759', '#FF9500', '#FF3B30']; // Violet remplacé par rouge dans la base pour éviter la confusion
+                const colors = ['#007AFF', '#34C759', '#FF9500', '#FF3B30']; 
                 let idx = 0;
                 if (db.years[currentYear]) {
                     for (let pName in db.years[currentYear]) {
@@ -1469,7 +1491,6 @@
                 else renderBarChart(labels, datasetOptions);
             }
 
-            // Exécute la vérification d'abréviation une fois que le texte est injecté dans le DOM
             setTimeout(adjustTitleSize, 10);
         }
 
@@ -1526,9 +1547,9 @@
             const isDark = isEffectivelyDark();
             const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
             const labelColor = isDark ? '#AEAEB2' : '#1C1C1E';
-            const studentLineColor = isEffectivelyDark() ? '#FF453A' : '#FF3B30'; // Rouge iOS
-            const promoLineColor = isDark ? '#FFFFFF' : '#1C1C1E'; // Texte Primaire
-            const barColor = isDark ? 'rgba(10, 132, 255, 0.4)' : 'rgba(0, 122, 255, 0.4)'; // Bleu clair iOS
+            const studentLineColor = isEffectivelyDark() ? '#FF453A' : '#FF3B30';
+            const promoLineColor = isDark ? '#FFFFFF' : '#1C1C1E';
+            const barColor = isDark ? 'rgba(10, 132, 255, 0.4)' : 'rgba(0, 122, 255, 0.4)';
             
             const isSimAnywhere = studentPointColors.includes('#AF52DE');
 
@@ -1545,7 +1566,7 @@
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     tension: 0.2,
-                    order: 1 // Dessiné au dessus
+                    order: 1
                 },
                 {
                     type: 'line',
@@ -1554,7 +1575,7 @@
                     borderColor: promoLineColor,
                     backgroundColor: promoLineColor,
                     borderWidth: 2,
-                    borderDash: [5, 5], // Ligne pointillée
+                    borderDash: [5, 5], 
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     tension: 0.2,
@@ -1564,11 +1585,11 @@
                 {
                     type: 'bar',
                     label: "Min/Max Promo",
-                    data: promoMinMaxData, // Format attendu: [[min, max], [min, max]]
+                    data: promoMinMaxData,
                     backgroundColor: barColor,
                     borderRadius: 4,
                     borderSkipped: false,
-                    order: 3 // Dessiné en dessous
+                    order: 3
                 }
             ];
 
@@ -1578,11 +1599,11 @@
                 options: {
                     responsive: true, maintainAspectRatio: false,
                     scales: {
-                        x: { ticks: { color: labelColor }, grid: { display: false } },
-                        y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: gridColor } }
+                        x: { ticks: { color: labelColor }, grid: { display: false }, border: { display: false } },
+                        y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: gridColor }, border: { display: false } }
                     },
                     plugins: { 
-                        legend: { display: false }, // LA LÉGENDE NATIVE EST DÉSACTIVÉE ICI
+                        legend: { display: false },
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
@@ -1633,8 +1654,8 @@
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
                     scales: { 
-                        x: { ticks: { color: labelColor }, grid: { display: false } }, 
-                        y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: gridColor } } 
+                        x: { ticks: { color: labelColor }, grid: { display: false }, border: { display: false } }, 
+                        y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: gridColor }, border: { display: false } } 
                     }, 
                     plugins: { legend: { display: datasets.length > 1, labels: { color: labelColor } } } 
                 } 
