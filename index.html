@@ -261,11 +261,47 @@
         }
         .chart-container canvas { max-width: 100%; max-height: 100%; }
 
-        /* --- CUSTOM APPLE TOGGLE SWITCH (GRAPHIQUES) --- */
-        .custom-apple-toggle {
+        /* --- CONTROLES GRAPHIQUES --- */
+        .chart-controls {
             position: absolute;
             top: 12px;
             right: 15px;
+            display: flex;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        /* --- BOUTON INFO LEGENDE --- */
+        .info-btn-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #F2F2F7;
+            border: 1px solid var(--separator);
+            color: var(--system-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+            transition: background-color 0.3s ease, border-color 0.3s ease, opacity 0.2s ease;
+            outline: none;
+            padding: 0;
+        }
+        .info-btn-circle:hover { opacity: 0.8; }
+        body.dark-theme .info-btn-circle {
+            background-color: #1C1C1E;
+            border-color: rgba(255, 255, 255, 0.05);
+        }
+        @media (prefers-color-scheme: dark) {
+            body.system-theme .info-btn-circle {
+                background-color: #1C1C1E;
+                border-color: rgba(255, 255, 255, 0.05);
+            }
+        }
+
+        /* --- CUSTOM APPLE TOGGLE SWITCH (GRAPHIQUES) --- */
+        .custom-apple-toggle {
             width: 56px;
             height: 32px;
             border-radius: 32px;
@@ -277,7 +313,6 @@
             display: flex;
             align-items: center;
             transition: background-color 0.3s ease, border-color 0.3s ease;
-            z-index: 10; 
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
         }
         body.dark-theme .custom-apple-toggle {
@@ -453,7 +488,7 @@
         }
         .modal-backdrop.show .modal-card { transform: scale(1); }
         .modal-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 5px; color: var(--txt-primaire); }
-        .modal-card p { font-size: 13px; color: var(--txt-primaire); margin-bottom: 16px; line-height: 1.35; padding: 0 4px; }
+        #modal-message { font-size: 13px; color: var(--txt-primaire); margin-bottom: 16px; line-height: 1.35; padding: 0 4px; }
         .modal-actions { display: flex; border-top: 1px solid var(--separator); margin: 0 -16px 0 -16px; }
         .modal-btn {
             flex: 1; padding: 11px; background: none; border: none; font-size: 16px; cursor: pointer; color: var(--system-blue); transition: background 0.15s; outline: none;
@@ -581,7 +616,7 @@
     <div id="custom-modal" class="modal-backdrop">
         <div class="modal-card">
             <h3 id="modal-title">Titre</h3>
-            <p id="modal-message">Description...</p>
+            <div id="modal-message">Description...</div>
             <div id="modal-actions-container" class="modal-actions"></div>
         </div>
     </div>
@@ -591,8 +626,8 @@
 
         // === DEBUT CONFIGURATION FIREBASE ===
         const firebaseConfig = {
-            apiKey: "AIzaSyCI2ESfSMw5QhH-WLZ2HYwDwMeoAmuRxf",
-            authDomain: "notes-fbc4f.firebaseapp.com",
+            apiKey: "AIzaSyCI2ESfSMw5QhH-WLZ2HYwDwMeoAmuRxfw",
+            authDomain: "notes-fbc4f.firebaseapp.co",
             databaseURL: "https://notes-fbc4f-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "notes-fbc4f",
             storageBucket: "notes-fbc4f.firebasestorage.app",
@@ -812,7 +847,7 @@
         function showCustomConfirm(title, message, onConfirm, isDestructive = false) {
             const modal = document.getElementById('custom-modal');
             document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-message').innerText = message;
+            document.getElementById('modal-message').innerHTML = message;
             const actions = document.getElementById('modal-actions-container');
             actions.innerHTML = `
                 <button class="modal-btn" onclick="closeCustomModal()">Annuler</button>
@@ -825,10 +860,44 @@
         function showCustomAlert(title, message) {
             const modal = document.getElementById('custom-modal');
             document.getElementById('modal-title').innerText = title;
-            document.getElementById('modal-message').innerText = message;
+            document.getElementById('modal-message').innerHTML = message;
             const actions = document.getElementById('modal-actions-container');
             actions.innerHTML = `<button class="modal-btn bold" onclick="closeCustomModal()" style="width:100%;">OK</button>`;
             modal.classList.add('show');
+        }
+
+        function showLegendInfo() {
+            const isDark = isEffectivelyDark();
+            const studentCol = isDark ? '#FF453A' : '#FF3B30';
+            const promoCol = isDark ? '#FFFFFF' : '#1C1C1E';
+            const simCol = '#AF52DE';
+            const barCol = isDark ? 'rgba(10, 132, 255, 0.4)' : 'rgba(0, 122, 255, 0.4)';
+
+            let msg = `
+                <div style="text-align: left; font-size: 14px; line-height: 1.6; display: flex; flex-direction: column; gap: 14px; margin-top: 15px; margin-bottom: 5px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="display:inline-block; width:24px; height:3px; background-color:${studentCol}; border-radius:2px; flex-shrink:0; position:relative;">
+                            <span style="position:absolute; width:8px; height:8px; background-color:${studentCol}; border-radius:50%; top:-2.5px; left:8px;"></span>
+                        </span>
+                        <span><b>Moyenne de l'élève</b> (Réelle)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="display:inline-block; width:24px; height:3px; background-color:${simCol}; border-radius:2px; flex-shrink:0; position:relative;">
+                            <span style="position:absolute; width:8px; height:8px; background-color:${simCol}; border-radius:50%; top:-2.5px; left:8px;"></span>
+                        </span>
+                        <span><b>Moyenne de l'élève</b> (Simulée)</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="display:inline-block; width:24px; border-bottom: 2px dashed ${promoCol}; flex-shrink:0;"></span>
+                        <span><b>Moyenne de la promo</b></span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="display:inline-block; width:24px; height:16px; background-color:${barCol}; border-radius:4px; flex-shrink:0;"></span>
+                        <span><b>Étendue de la classe</b> (Min - Max)</span>
+                    </div>
+                </div>
+            `;
+            showCustomAlert("Légende du graphique", msg);
         }
         
         function closeCustomModal() { document.getElementById('custom-modal').classList.remove('show'); }
@@ -1130,20 +1199,36 @@
             
             simToggle.style.display = activeView === 'accueil' ? 'none' : 'inline-flex';
 
-            let chartToggleHtml = `
-                <button class="custom-apple-toggle ${currentChartMode === 'bar' ? 'bar-mode' : ''}" onclick="toggleChartType(this)">
-                    <div class="toggle-thumb">
-                        <svg class="icon-radar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
-                            <circle cx="12" cy="12" r="3"></circle>
+            let infoBtnHtml = '';
+            if (activeView === 'page' && currentChartMode !== 'radar') {
+                infoBtnHtml = `
+                    <button class="info-btn-circle" onclick="showLegendInfo()" aria-label="Légende">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="16" x2="12" y2="12"></line>
+                            <line x1="12" y1="8" x2="12.01" y2="8"></line>
                         </svg>
-                        <svg class="icon-bar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="18" y1="20" x2="18" y2="10"></line>
-                            <line x1="12" y1="20" x2="12" y2="4"></line>
-                            <line x1="6" y1="20" x2="6" y2="14"></line>
-                        </svg>
-                    </div>
-                </button>
+                    </button>
+                `;
+            }
+
+            let chartControlsHtml = `
+                <div class="chart-controls">
+                    ${infoBtnHtml}
+                    <button class="custom-apple-toggle ${currentChartMode === 'bar' ? 'bar-mode' : ''}" onclick="toggleChartType(this)">
+                        <div class="toggle-thumb">
+                            <svg class="icon-radar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="icon-bar" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="20" x2="18" y2="10"></line>
+                                <line x1="12" y1="20" x2="12" y2="4"></line>
+                                <line x1="6" y1="20" x2="6" y2="14"></line>
+                            </svg>
+                        </div>
+                    </button>
+                </div>
             `;
 
             if (activeView === 'page') {
@@ -1161,7 +1246,7 @@
                 
                 let viewHtml = `
                     <div class="chart-container" style="margin-bottom: 30px;">
-                        ${chartToggleHtml}
+                        ${chartControlsHtml}
                         <canvas id="mainChart"></canvas>
                     </div>`;
                 viewHtml += `<div class="list-container">`;
@@ -1278,7 +1363,7 @@
                 }
                 viewHtml += `</div>
                     <div class="chart-container">
-                        ${chartToggleHtml}
+                        ${chartControlsHtml}
                         <canvas id="mainChart"></canvas>
                     </div>`;
                 content.innerHTML = viewHtml;
@@ -1362,7 +1447,7 @@
                 viewHtml += gridHtml;
                 viewHtml += `
                     <div class="chart-container" style="height:340px;">
-                        ${chartToggleHtml}
+                        ${chartControlsHtml}
                         <canvas id="mainChart"></canvas>
                     </div>`;
                 
@@ -1445,7 +1530,6 @@
             const promoLineColor = isDark ? '#FFFFFF' : '#1C1C1E'; // Texte Primaire
             const barColor = isDark ? 'rgba(10, 132, 255, 0.4)' : 'rgba(0, 122, 255, 0.4)'; // Bleu clair iOS
             
-            // Si la matière entière est en simulation, on met la ligne en violet, sinon on garde le rouge et on colore juste les points
             const isSimAnywhere = studentPointColors.includes('#AF52DE');
 
             const datasets = [
@@ -1498,7 +1582,7 @@
                         y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: gridColor } }
                     },
                     plugins: { 
-                        legend: { labels: { color: labelColor, usePointStyle: true, boxWidth: 8 } },
+                        legend: { display: false }, // LA LÉGENDE NATIVE EST DÉSACTIVÉE ICI
                         tooltip: {
                             callbacks: {
                                 label: function(context) {
@@ -1534,7 +1618,7 @@
                             ticks: { color: '#8E8E93', backdropColor: 'transparent', stepSize: 4 } 
                         } 
                     }, 
-                    plugins: { legend: { labels: { color: labelColor, boxWidth: 12, font: { size: 12 } } } } 
+                    plugins: { legend: { display: false } } 
                 } 
             }); 
         }
