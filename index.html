@@ -113,7 +113,6 @@
         body { 
             display: flex; 
             height: 100vh; height: 100dvh; 
-            padding-bottom: env(safe-area-inset-bottom);
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; 
             background-color: var(--bg-cahier); 
@@ -194,13 +193,7 @@
             }
         }
         
-       .sidebar-footer { 
-            padding: 12px 12px calc(12px + env(safe-area-inset-bottom)) 12px; 
-            display: flex; 
-            gap: 8px; 
-            border-top: 1px solid var(--separator); 
-            background: var(--bg-feuillet); 
-        }
+        .sidebar-footer { padding: 12px; display: flex; gap: 8px; border-top: 1px solid var(--separator); background: var(--bg-feuillet); }
         .btn-history { flex: 1; padding: 8px; background-color: var(--system-gray6); color: var(--system-blue); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.2s; }
         .btn-history:hover { background-color: var(--separator); }
         .btn-history:disabled { color: var(--txt-secondaire); cursor: not-allowed; opacity: 0.5;}
@@ -534,8 +527,8 @@
             .badge-large { font-size: 14px; padding: 4px 10px; }
             
             .sidebar { 
-                position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh; max-height: 140dvh; padding-top: env(safe-area-inset-top);
-                padding-bottom: env(safe-area-inset-bottom);
+                position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh; max-height: 100dvh;
+                z-index: 100; box-shadow: 4px 0 15px rgba(0,0,0,0.1);
                 transform: translateX(0); width: 280px !important; opacity: 1 !important;
             }
             body.sidebar-hidden .sidebar { 
@@ -554,7 +547,7 @@
         }
 
         @media (max-width: 500px) {
-            .topbar { padding: calc(10px + env(safe-area-inset-top)) 12px 10px; gap: 8px; }
+            .topbar { padding: calc(15px + env(safe-area-inset-top)) 12px 10px; gap: 8px; }
             .topbar-left { gap: 6px; } 
             .topbar h1 { font-size: 18px; }
             .topbar-actions { gap: 6px; }
