@@ -366,7 +366,23 @@
         .list-body { display: none; }
         .list-body.active { display: block; }
         
-        .appreciation-box { padding: 12px 20px; font-style: italic; color: var(--txt-secondaire); font-size: 14px; display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--separator); border-bottom: 1px solid var(--separator);}
+        /* --- STATS PROMO --- */
+        .promo-stats-box {
+            padding: 10px 20px;
+            font-size: 13px;
+            color: var(--txt-secondaire);
+            display: flex;
+            gap: 20px;
+            border-bottom: 1px solid var(--separator);
+            background-color: var(--bg-card-hover);
+        }
+        .promo-stat-item span {
+            font-weight: 600;
+            color: var(--txt-primaire);
+            margin-left: 4px;
+        }
+
+        .appreciation-box { padding: 12px 20px; font-style: italic; color: var(--txt-secondaire); font-size: 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--separator);}
         .appreciation-box strong { color: var(--txt-primaire); font-weight: 600; font-style: normal; margin-right: 5px;}
 
         .sub-subject-header { padding: 12px 20px; font-weight: 600; font-size: 15px; color: var(--txt-primaire); display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sub-subject); transition: all 0.3s ease;}
@@ -470,6 +486,7 @@
             .chart-container { height: 320px !important; padding: 50px 15px 15px 15px !important; }
             .subject-title-area { flex-wrap: wrap; }
             .apple-input { font-size: 16px; }
+            .promo-stats-box { flex-wrap: wrap; gap: 10px; }
         }
 
         /* --- VRAIE CORRECTION POUR MOBILE --- */
@@ -574,7 +591,7 @@
 
         // === DEBUT CONFIGURATION FIREBASE ===
         const firebaseConfig = {
-            apiKey: "AIzaSyCI2ESfSMw5QhH-WLZ2HYwDwMeoAmuRxfw",
+            apiKey: "AIzaSyCI2ESfSMw5QhH-WLZ2HYwDwMeoAmuRxf",
             authDomain: "notes-fbc4f.firebaseapp.com",
             databaseURL: "https://notes-fbc4f-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "notes-fbc4f",
@@ -592,17 +609,17 @@
             years: {
                 "Année 1": {
                     "Semestre 1": [
-                        { name: "CGE", coef: 6, appreciation: "Excellent semestre. Le travail est sérieux.", notes: [{val: 18, coef: 2, sim: false}, {val: 18, coef: 1, sim: false}, {val: 17.5, coef: 2, sim: false}] },
-                        { name: "Formation Humaine", coef: 6, appreciation: "Bonne participation globale.", notes: [{val: 16, coef: 1, sim: false}, {val: 16, coef: 1, sim: false}] },
+                        { name: "CGE", coef: 6, promoAvg: 14.2, promoMin: 8.5, promoMax: 18.5, appreciation: "Excellent semestre. Le travail est sérieux.", notes: [{val: 18, coef: 2, sim: false}, {val: 18, coef: 1, sim: false}, {val: 17.5, coef: 2, sim: false}] },
+                        { name: "Formation Humaine", coef: 6, promoAvg: 13.8, promoMin: 10, promoMax: 17, appreciation: "Bonne participation globale.", notes: [{val: 16, coef: 1, sim: false}, {val: 16, coef: 1, sim: false}] },
                         { 
-                            name: "Génie Mécanique", coef: 7, appreciation: "Très bons résultats en mécanique.", 
+                            name: "Génie Mécanique", coef: 7, promoAvg: 11.5, promoMin: 7, promoMax: 16, appreciation: "Très bons résultats en mécanique.", 
                             subSubjects: [
                                 { name: "Dimensionnement", coef: 4, notes: [{val: 15, coef: 2, sim: false}, {val: 17.7, coef: 2, sim: false}] },
                                 { name: "Construction Mécanique", coef: 3, notes: [{val: 12.9, coef: 1, sim: false}, {val: 14, coef: 2, sim: false}] }
                             ]
                         },
-                        { name: "Génie électrique", coef: 18, appreciation: "Résultats satisfaisants.", notes: [{val: 16.2, coef: 3.25, sim: false}, {val: 18, coef: 3, sim: false}, {val: 9.5, coef: 3, sim: false}, {val: 12.1, coef: 1, sim: false}, {val: 15.1, coef: 1, sim: false}, {val: 20, coef: 0.5, sim: false}, {val: 15.7, coef: 3, sim: false}, {val: 15.8, coef: 3.25, sim: false}] },
-                        { name: "Anglais", coef: 10, appreciation: "Travail très rigoureux.", notes: [{val: 9.75, coef: 1, sim: false}, {val: 12, coef: 1, sim: false}, {val: 13.5, coef: 2, sim: false}, {val: 14, coef: 1, sim: false}, {val: 17, coef: 1, sim: false}] }
+                        { name: "Génie électrique", coef: 18, promoAvg: 12.1, promoMin: 6.5, promoMax: 19.5, appreciation: "Résultats satisfaisants.", notes: [{val: 16.2, coef: 3.25, sim: false}, {val: 18, coef: 3, sim: false}, {val: 9.5, coef: 3, sim: false}, {val: 12.1, coef: 1, sim: false}, {val: 15.1, coef: 1, sim: false}, {val: 20, coef: 0.5, sim: false}, {val: 15.7, coef: 3, sim: false}, {val: 15.8, coef: 3.25, sim: false}] },
+                        { name: "Anglais", coef: 10, promoAvg: 13.0, promoMin: 8, promoMax: 18, appreciation: "Travail très rigoureux.", notes: [{val: 9.75, coef: 1, sim: false}, {val: 12, coef: 1, sim: false}, {val: 13.5, coef: 2, sim: false}, {val: 14, coef: 1, sim: false}, {val: 17, coef: 1, sim: false}] }
                     ],
                     "Semestre 2": [
                         { name: "CGE", coef: 6, appreciation: "Bonne continuation.", notes: [{val: 15.5, coef: 3, sim: false}, {val: 16, coef: 3, sim: false}] },
@@ -926,8 +943,29 @@
         function updateSubjectField(field, sIdx, el) {
             if(!checkEditGuard()) return;
             let sub = db.years[currentYear][currentPage][sIdx]; let val = el.innerText.trim();
-            if (field === 'coef') { let num = parseFloat(val.replace(',','.')); if(isNaN(num) || num <= 0) { el.innerText = sub.coef; return; } if(sub.coef !== num) { sub.coef = num; save(); renderMainContent(); } } 
-            else { if(!val && field==='name') { el.innerText = sub.name; return; } if(sub[field] !== val) { sub[field] = val; save(); renderMainContent(); } }
+            
+            if (['coef', 'promoAvg', 'promoMin', 'promoMax'].includes(field)) {
+                // Gestion des champs vides pour la promo (permet d'effacer la stat)
+                if (val === '' || val === '-') {
+                    if (field !== 'coef') {
+                        sub[field] = null; save(); renderMainContent();
+                    } else {
+                        el.innerText = sub.coef; // Le coef ne peut pas être vide
+                    }
+                    return;
+                }
+                
+                let num = parseFloat(val.replace(',','.'));
+                if(isNaN(num) || (field === 'coef' && num <= 0)) { 
+                    el.innerText = (sub[field] !== undefined && sub[field] !== null) ? sub[field] : '-'; 
+                    return; 
+                }
+                if(sub[field] !== num) { sub[field] = num; save(); renderMainContent(); }
+            } 
+            else { 
+                if(!val && field==='name') { el.innerText = sub.name; return; } 
+                if(sub[field] !== val) { sub[field] = val; save(); renderMainContent(); } 
+            }
         }
 
         function updateSubSubjectField(field, sIdx, subIdx, el) {
@@ -1119,6 +1157,7 @@
                 
                 const pageData = db.years[currentYear][currentPage] || [];
                 let labels = [], dataVals = [], bgColors = [], pointColors = [];
+                let promoAvgs = [], promoMinMax = [];
                 
                 let viewHtml = `
                     <div class="chart-container" style="margin-bottom: 30px;">
@@ -1130,7 +1169,16 @@
                 pageData.forEach((subject, sIdx) => {
                     const subAvg = calcSubjectAvg(subject); 
                     labels.push(subject.name); 
-                    dataVals.push(subAvg !== null ? parseFloat(subAvg.toFixed(2)) : 0);
+                    dataVals.push(subAvg !== null ? parseFloat(subAvg.toFixed(2)) : null);
+                    
+                    // Récupération des données Promo
+                    promoAvgs.push((subject.promoAvg !== undefined && subject.promoAvg !== null) ? parseFloat(subject.promoAvg) : null);
+                    if (subject.promoMin !== undefined && subject.promoMin !== null && subject.promoMax !== undefined && subject.promoMax !== null) {
+                        promoMinMax.push([parseFloat(subject.promoMin), parseFloat(subject.promoMax)]);
+                    } else {
+                        promoMinMax.push(null);
+                    }
+
                     const isSubjectOpen = openSubjects.has(sIdx.toString());
 
                     // --- DETECTE SI LA MATIERE GLOBALE CONTIENT DES SIMULATIONS ---
@@ -1143,8 +1191,9 @@
                         bgColors.push('#AF52DE');
                         pointColors.push('#AF52DE');
                     } else {
-                        bgColors.push('#007AFF');
-                        pointColors.push('#007AFF');
+                        const defaultCol = isEffectivelyDark() ? '#FF453A' : '#FF3B30'; // Rouge natif iOS
+                        bgColors.push(defaultCol);
+                        pointColors.push(defaultCol);
                     }
 
                     viewHtml += `
@@ -1158,6 +1207,11 @@
                                 <div class="badge ${getBadgeClass(subAvg)}">${formatVal(subAvg)}</div>
                             </div>
                             <div id="body-${sIdx}" class="list-body ${isSubjectOpen ? 'active' : ''}">
+                                <div class="promo-stats-box">
+                                    <div class="promo-stat-item">Moyenne promo: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('promoAvg', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${(subject.promoAvg !== undefined && subject.promoAvg !== null) ? subject.promoAvg : '-'}</span></div>
+                                    <div class="promo-stat-item">Min: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('promoMin', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${(subject.promoMin !== undefined && subject.promoMin !== null) ? subject.promoMin : '-'}</span></div>
+                                    <div class="promo-stat-item">Max: <span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('promoMax', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${(subject.promoMax !== undefined && subject.promoMax !== null) ? subject.promoMax : '-'}</span></div>
+                                </div>
                                 <div class="appreciation-box">
                                     <div style="flex:1"><strong>Appréciation :</strong><span class="${isEditMode ? 'editable-text' : ''}" contenteditable="${isEditMode}" onblur="updateSubjectField('appreciation', '${sIdx}', this)" onkeydown="handleEditableKeydown(event, this)">${subject.appreciation || (isEditMode ? 'Ajouter un commentaire...' : '-')}</span></div>
                                 </div>`;
@@ -1194,19 +1248,17 @@
                 viewHtml += `</div><div class="edit-only-block">${buildAddSubjectForm()}</div>`;
                 content.innerHTML = viewHtml;
 
-                const datasetOptions = [{ 
-                    label: currentPage, 
-                    data: dataVals, 
-                    borderColor: currentChartMode === 'bar' ? bgColors : '#007AFF', 
-                    backgroundColor: currentChartMode === 'bar' ? bgColors : 'rgba(0, 122, 255, 0.05)',
-                    pointBackgroundColor: pointColors,
-                    pointBorderColor: pointColors,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
-                    borderRadius: currentChartMode === 'bar' ? 8 : 0
-                }];
-                if (currentChartMode === 'radar') renderRadar(labels, datasetOptions);
-                else renderBarChart(labels, datasetOptions);
+                if (currentChartMode === 'radar') {
+                    const datasetOptions = [{ 
+                        label: currentPage, data: dataVals, 
+                        borderColor: '#007AFF', backgroundColor: 'rgba(0, 122, 255, 0.05)',
+                        pointBackgroundColor: pointColors, pointBorderColor: pointColors,
+                        pointRadius: 4, pointHoverRadius: 6, borderRadius: 0
+                    }];
+                    renderRadar(labels, datasetOptions);
+                } else {
+                    renderComboChart(labels, dataVals, pointColors, promoAvgs, promoMinMax);
+                }
 
             } else if (activeView === 'bilan_annuel') {
                 const titleStr = `Bilan Annuel ${currentYear}`;
@@ -1381,6 +1433,88 @@
                         <button class="btn-action" onclick="submitSubject()">Créer</button>
                     </div>
                 </div>`;
+        }
+
+        /* === FONCTION GRAPHIQUE COMBO (PRONOTE STYLE) === */
+        function renderComboChart(labels, studentData, studentPointColors, promoAvgData, promoMinMaxData) {
+            const ctx = document.getElementById('mainChart').getContext('2d'); if (globalChart) globalChart.destroy(); 
+            const isDark = isEffectivelyDark();
+            const gridColor = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.06)';
+            const labelColor = isDark ? '#AEAEB2' : '#1C1C1E';
+            const studentLineColor = isEffectivelyDark() ? '#FF453A' : '#FF3B30'; // Rouge iOS
+            const promoLineColor = isDark ? '#FFFFFF' : '#1C1C1E'; // Texte Primaire
+            const barColor = isDark ? 'rgba(10, 132, 255, 0.4)' : 'rgba(0, 122, 255, 0.4)'; // Bleu clair iOS
+            
+            // Si la matière entière est en simulation, on met la ligne en violet, sinon on garde le rouge et on colore juste les points
+            const isSimAnywhere = studentPointColors.includes('#AF52DE');
+
+            const datasets = [
+                {
+                    type: 'line',
+                    label: "Moyenne de l'élève",
+                    data: studentData,
+                    borderColor: isSimAnywhere ? '#AF52DE' : studentLineColor,
+                    backgroundColor: isSimAnywhere ? '#AF52DE' : studentLineColor,
+                    pointBackgroundColor: studentPointColors,
+                    pointBorderColor: studentPointColors,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.2,
+                    order: 1 // Dessiné au dessus
+                },
+                {
+                    type: 'line',
+                    label: "Moyenne Promo",
+                    data: promoAvgData,
+                    borderColor: promoLineColor,
+                    backgroundColor: promoLineColor,
+                    borderWidth: 2,
+                    borderDash: [5, 5], // Ligne pointillée
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.2,
+                    spanGaps: true,
+                    order: 2
+                },
+                {
+                    type: 'bar',
+                    label: "Min/Max Promo",
+                    data: promoMinMaxData, // Format attendu: [[min, max], [min, max]]
+                    backgroundColor: barColor,
+                    borderRadius: 4,
+                    borderSkipped: false,
+                    order: 3 // Dessiné en dessous
+                }
+            ];
+
+            globalChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: labelColor }, grid: { display: false } },
+                        y: { min: 0, max: 20, ticks: { color: '#8E8E93', stepSize: 4 }, grid: { color: gridColor } }
+                    },
+                    plugins: { 
+                        legend: { labels: { color: labelColor, usePointStyle: true, boxWidth: 8 } },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.dataset.type === 'bar') {
+                                        const raw = context.raw;
+                                        if (Array.isArray(raw)) return `Plage de la promo: ${raw[0]} - ${raw[1]}`;
+                                    }
+                                    return label + context.parsed.y;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
         }
 
         function renderRadar(labels, datasets) { 
