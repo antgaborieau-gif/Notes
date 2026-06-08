@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#FFFFFF" id="theme-color-meta">
     <meta name="apple-mobile-web-app-title" content="Carnet Pro">
     <link rel="apple-touch-icon" href="logo.png">
 
@@ -804,6 +805,12 @@
             const iconContainer = document.getElementById('theme-icon-active');
             if(iconContainer) { iconContainer.innerHTML = themeIcons[currentThemeState]; }
             
+            // --- FIX BARRE D'ÉTAT iOS ---
+            const metaThemeColor = document.getElementById('theme-color-meta');
+            if (metaThemeColor) {
+                metaThemeColor.setAttribute("content", isEffectivelyDark() ? "#1C1C1E" : "#FFFFFF");
+            }
+
             if (globalChart) renderMainContent();
         }
 
@@ -1284,6 +1291,7 @@
                         promoMinMax.push(null);
                     }
 
+                    // --- VARIABLES POUR LES PLACEHOLDERS ---
                     const promoAvgVal = (subject.promoAvg !== undefined && subject.promoAvg !== null) ? subject.promoAvg : '';
                     const promoMinVal = (subject.promoMin !== undefined && subject.promoMin !== null) ? subject.promoMin : '';
                     const promoMaxVal = (subject.promoMax !== undefined && subject.promoMax !== null) ? subject.promoMax : '';
