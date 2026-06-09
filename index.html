@@ -551,7 +551,6 @@
         }
 
         @media (max-width: 500px) {
-            /* AJOUT DU CALC POUR GÉRER L'ENCOCHE PROPREMENT */
             .topbar { padding: calc(15px + env(safe-area-inset-top)) 12px 10px; gap: 8px; }
             .topbar-left { gap: 6px; } 
             .topbar h1 { font-size: 18px; }
@@ -670,7 +669,7 @@
         // === FIN CONFIGURATION FIREBASE ===
 
         const defaultData = {
-            pageMeta: {}, // Nouvel objet pour sauvegarder les moyennes promo globales
+            pageMeta: {}, 
             years: {
                 "Année 1": {
                     "Semestre 1": [
@@ -701,7 +700,7 @@
         let openYears = { "Année 1": true }; let openSubjects = new Set(); 
         
         let currentThemeState = localStorage.getItem('apple_notes_theme_v5') || 'system';
-        let currentChartMode = 'bar'; // Graphique à bâtons par défaut
+        let currentChartMode = 'bar'; 
 
         function hasSimulatedNotes(subject) {
             if (subject.notes && subject.notes.some(n => n.sim)) return true;
@@ -1078,7 +1077,6 @@
             currentPage = newName; save(); renderSidebar(); renderMainContent();
         }
 
-        // --- FONCTION POUR METTRE À JOUR LA MOYENNE PROMO GLOBALE DE LA PAGE ---
         function updatePagePromoAvg(el) {
             if(!checkEditGuard()) { return; }
             let val = el.innerText.trim();
@@ -1338,7 +1336,6 @@
             if (activeView === 'page') {
                 const pageAvg = calcPageAvg(db.years[currentYear][currentPage]);
                 
-                // Récupération de la moyenne promo globale de la page
                 if(!db.pageMeta) db.pageMeta = {};
                 let meta = (db.pageMeta[currentYear] && db.pageMeta[currentYear][currentPage]) ? db.pageMeta[currentYear][currentPage] : {};
                 let pPromoAvg = (meta.promoAvg !== undefined && meta.promoAvg !== null) ? meta.promoAvg : '';
@@ -1346,15 +1343,7 @@
                 title.innerHTML = `
                     <span id="dynamic-page-title" class="${isEditMode ? 'editable-text' : ''} title-text-ellipsis" contenteditable="${isEditMode}" data-fulltext="${currentPage}" onblur="updatePageName('${currentPage}', this)" onkeydown="handleEditableKeydown(event, this)">${currentPage}</span>
                     <button class="icon-btn danger-zone edit-only" style="flex-shrink: 0;" onclick="deletePage()">${svgTrash}</button>
-                    <div style="display:flex; gap:8px; margin-left:auto; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
-                        <div class="badge badge-large" style="background:var(--bg-card-hover); color:var(--txt-secondaire); border:1px solid var(--separator);">
-                            <span class="moy-text" style="font-weight:normal; font-size:13px;">Promo : </span>
-                            <span class="${isEditMode ? 'editable-text' : ''}" style="font-weight:700;" contenteditable="${isEditMode}" data-placeholder="-" onblur="updatePagePromoAvg(this)" onkeydown="handleEditableKeydown(event, this)">${isEditMode ? pPromoAvg : (pPromoAvg !== '' ? pPromoAvg : '-')}</span>
-                        </div>
-                        <div class="badge badge-large ${getBadgeClass(pageAvg)} title-badge">
-                            <span class="moy-text">Moyenne : </span>${formatVal(pageAvg)}
-                        </div>
-                    </div>
+                    <div class="badge badge-large ${getBadgeClass(pageAvg)} title-badge" style="margin-left: auto;"><span class="moy-text">Moyenne : </span>${formatVal(pageAvg)}</div>
                 `;
                 
                 const pageData = db.years[currentYear][currentPage] || [];
@@ -1362,6 +1351,13 @@
                 let promoAvgs = [], promoMinMax = [];
                 
                 let viewHtml = `
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 15px;">
+                        <div style="background-color: var(--bg-feuillet); border: 1px solid var(--separator); border-radius: 12px; padding: 8px 14px; font-size: 14px; color: var(--txt-secondaire); display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.7;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                            <span>Moyenne Promo :</span>
+                            <span class="${isEditMode ? 'editable-text' : ''}" style="font-weight: 700; color: var(--txt-primaire); min-width: 20px; text-align: center;" contenteditable="${isEditMode}" data-placeholder="-" onblur="updatePagePromoAvg(this)" onkeydown="handleEditableKeydown(event, this)">${isEditMode ? pPromoAvg : (pPromoAvg !== '' ? pPromoAvg : '-')}</span>
+                        </div>
+                    </div>
                     <div class="chart-container" style="margin-bottom: 30px;">
                         ${chartControlsHtml}
                         <canvas id="mainChart"></canvas>
@@ -1380,7 +1376,6 @@
                         promoMinMax.push(null);
                     }
 
-                    // --- VARIABLES POUR LES PLACEHOLDERS ---
                     const promoAvgVal = (subject.promoAvg !== undefined && subject.promoAvg !== null) ? subject.promoAvg : '';
                     const promoMinVal = (subject.promoMin !== undefined && subject.promoMin !== null) ? subject.promoMin : '';
                     const promoMaxVal = (subject.promoMax !== undefined && subject.promoMax !== null) ? subject.promoMax : '';
