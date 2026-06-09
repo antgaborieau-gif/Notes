@@ -112,7 +112,7 @@
 
         body { 
             display: flex; 
-            height: 100vh; height: 100dvh; 
+            min-height: 100vh; min-height: 100dvh; 
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; 
             background-color: var(--bg-cahier); 
@@ -133,7 +133,6 @@
             transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease, transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             overflow: hidden; white-space: nowrap; flex-shrink: 0;
             padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
         }
 
         body.sidebar-hidden .sidebar { 
@@ -160,9 +159,6 @@
         .page-item:hover { background: var(--bg-hover); }
         .page-item.active { background: rgba(0, 122, 255, 0.08); color: var(--system-blue); font-weight: 600; }
         
-        .sidebar-btn { background: none; border: none; color: var(--system-blue); padding: 7px 12px 7px 28px; cursor: pointer; font-size: 14px; font-weight: 500; text-align: left; transition: opacity 0.2s; width: 100%;}
-        .sidebar-btn:hover { opacity: 0.7; }
-
         /* --- NOUVEAUX BOUTONS D'AJOUT --- */
         .sidebar-add-btn {
             background-color: rgba(0, 122, 255, 0.1);
@@ -193,7 +189,13 @@
             }
         }
         
-        .sidebar-footer { padding: 12px; display: flex; gap: 8px; border-top: 1px solid var(--separator); background: var(--bg-feuillet); }
+        .sidebar-footer { 
+            padding: 12px 12px calc(12px + env(safe-area-inset-bottom)) 12px; 
+            display: flex; 
+            gap: 8px; 
+            border-top: 1px solid var(--separator); 
+            background: var(--bg-feuillet); 
+        }
         .btn-history { flex: 1; padding: 8px; background-color: var(--system-gray6); color: var(--system-blue); border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; transition: background 0.2s; }
         .btn-history:hover { background-color: var(--separator); }
         .btn-history:disabled { color: var(--txt-secondaire); cursor: not-allowed; opacity: 0.5;}
@@ -202,7 +204,7 @@
             flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative;
             background-image: linear-gradient(var(--color-grid) 1px, transparent 1px), linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
             background-size: 20px 20px;
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-bottom: calc(40px + env(safe-area-inset-bottom));
         }
 
         .topbar { 
@@ -527,7 +529,9 @@
             .badge-large { font-size: 14px; padding: 4px 10px; }
             
             .sidebar { 
-                position: fixed; top: 0; left: 0; height: 100vh; height: 100dvh; max-height: 100dvh;
+                position: fixed; top: 0; left: 0; 
+                height: 100dvh;
+                padding-bottom: env(safe-area-inset-bottom);
                 z-index: 100; box-shadow: 4px 0 15px rgba(0,0,0,0.1);
                 transform: translateX(0); width: 280px !important; opacity: 1 !important;
             }
@@ -547,7 +551,8 @@
         }
 
         @media (max-width: 500px) {
-            .topbar { padding: calc(10px + env(safe-area-inset-top)) 12px 10px; gap: 8px; }
+            /* AJOUT DU CALC POUR GÉRER L'ENCOCHE PROPREMENT */
+            .topbar { padding: calc(15px + env(safe-area-inset-top)) 12px 10px; gap: 8px; }
             .topbar-left { gap: 6px; } 
             .topbar h1 { font-size: 18px; }
             .topbar-actions { gap: 6px; }
@@ -665,6 +670,7 @@
         // === FIN CONFIGURATION FIREBASE ===
 
         const defaultData = {
+            pageMeta: {}, // Nouvel objet pour sauvegarder les moyennes promo globales
             years: {
                 "Année 1": {
                     "Semestre 1": [
@@ -697,7 +703,6 @@
         let currentThemeState = localStorage.getItem('apple_notes_theme_v5') || 'system';
         let currentChartMode = 'bar'; // Graphique à bâtons par défaut
 
-        // === FONCTIONS DE DETECTION DES SIMULATIONS ===
         function hasSimulatedNotes(subject) {
             if (subject.notes && subject.notes.some(n => n.sim)) return true;
             if (subject.subSubjects) {
@@ -714,7 +719,6 @@
             return Object.values(yearData).some(page => hasPageSimulatedNotes(page));
         }
 
-        // === FONCTION D'ABRÉVIATION INTELLIGENTE ===
         function getShortName(str) {
             return str.replace(/Année\s*/gi, 'A').replace(/Semestre\s*/gi, 'S');
         }
@@ -735,9 +739,12 @@
 
         function checkDataConsistency() {
             if (!db || !db.years) { db = JSON.parse(JSON.stringify(defaultData)); }
+            if (!db.pageMeta) { db.pageMeta = {}; }
             
             for (let y in db.years) {
+                if(!db.pageMeta[y]) db.pageMeta[y] = {};
                 for (let p in db.years[y]) {
+                    if(!db.pageMeta[y][p]) db.pageMeta[y][p] = {};
                     if (Array.isArray(db.years[y][p])) {
                         db.years[y][p].forEach(sub => {
                             if (sub.isNested && !sub.subSubjects) sub.subSubjects = [];
@@ -805,7 +812,6 @@
             const iconContainer = document.getElementById('theme-icon-active');
             if(iconContainer) { iconContainer.innerHTML = themeIcons[currentThemeState]; }
             
-            // --- FIX BARRE D'ÉTAT iOS ---
             const metaThemeColor = document.getElementById('theme-color-meta');
             if (metaThemeColor) {
                 metaThemeColor.setAttribute("content", isEffectivelyDark() ? "#1C1C1E" : "#FFFFFF");
@@ -992,6 +998,8 @@
         function addNewYear() {
             if(!checkEditGuard()) return;
             db.years["Nouvelle Année"] = {};
+            if(!db.pageMeta) db.pageMeta = {};
+            db.pageMeta["Nouvelle Année"] = {};
             openYears["Nouvelle Année"] = true;
             save();
             setViewBilanAnnuel("Nouvelle Année");
@@ -1000,6 +1008,9 @@
         function addNewPage(yName) {
             if(!checkEditGuard()) return;
             db.years[yName]["Nouveau Semestre"] = [];
+            if(!db.pageMeta) db.pageMeta = {};
+            if(!db.pageMeta[yName]) db.pageMeta[yName] = {};
+            db.pageMeta[yName]["Nouveau Semestre"] = {};
             save();
             setViewPage(yName, "Nouveau Semestre");
         }
@@ -1007,14 +1018,21 @@
         function deleteYear(yName) { 
             if(!checkEditGuard()) return;
             showCustomConfirm("Supprimer l'année", `Voulez-vous supprimer l'année "${yName}" et toutes ses données définitivement ?`, () => {
-                delete db.years[yName]; delete openYears[yName]; checkDataConsistency(); save(); renderSidebar(); renderMainContent(); 
+                delete db.years[yName]; 
+                if (db.pageMeta) delete db.pageMeta[yName];
+                delete openYears[yName]; 
+                checkDataConsistency(); save(); renderSidebar(); renderMainContent(); 
             }, true);
         }
 
         function deletePage() { 
             if(!checkEditGuard()) return;
             showCustomConfirm("Supprimer la page", `Supprimer définitivement la page "${currentPage}" ?`, () => {
-                delete db.years[currentYear][currentPage]; let pages = Object.keys(db.years[currentYear]); if(pages.length > 0) currentPage = pages[0]; else activeView = 'bilan_annuel'; save(); renderSidebar(); renderMainContent(); 
+                delete db.years[currentYear][currentPage]; 
+                if (db.pageMeta && db.pageMeta[currentYear]) delete db.pageMeta[currentYear][currentPage];
+                let pages = Object.keys(db.years[currentYear]); 
+                if(pages.length > 0) currentPage = pages[0]; else activeView = 'bilan_annuel'; 
+                save(); renderSidebar(); renderMainContent(); 
             }, true);
         }
 
@@ -1023,8 +1041,19 @@
             let newName = el.innerText.trim();
             if(!newName || newName === oldName) { el.innerText = oldName; return; }
             if(db.years[newName]) { el.innerText = oldName; showCustomAlert("Nom existant", "Cette année existe déjà."); return; }
-            let newYears = {}; for(let y in db.years) { if(y === oldName) newYears[newName] = db.years[y]; else newYears[y] = db.years[y]; }
-            db.years = newYears; if(currentYear === oldName) currentYear = newName;
+            let newYears = {}; 
+            for(let y in db.years) { 
+                if(y === oldName) newYears[newName] = db.years[y]; 
+                else newYears[y] = db.years[y]; 
+            }
+            db.years = newYears; 
+            
+            if (db.pageMeta && db.pageMeta[oldName]) {
+                db.pageMeta[newName] = db.pageMeta[oldName];
+                delete db.pageMeta[oldName];
+            }
+            
+            if(currentYear === oldName) currentYear = newName;
             if(openYears[oldName]) { openYears[newName] = true; delete openYears[oldName]; }
             save(); renderSidebar(); renderMainContent();
         }
@@ -1034,8 +1063,45 @@
             let newName = el.innerText.trim();
             if(!newName || newName === oldName) { el.innerText = oldName; return; }
             if(db.years[currentYear][newName]) { el.innerText = oldName; showCustomAlert("Nom existant", "Ce semestre existe déjà."); return; }
-            let newPages = {}; for(let p in db.years[currentYear]) { if(p === oldName) newPages[newName] = db.years[currentYear][p]; else newPages[p] = db.years[currentYear][p]; }
-            db.years[currentYear] = newPages; currentPage = newName; save(); renderSidebar(); renderMainContent();
+            let newPages = {}; 
+            for(let p in db.years[currentYear]) { 
+                if(p === oldName) newPages[newName] = db.years[currentYear][p]; 
+                else newPages[p] = db.years[currentYear][p]; 
+            }
+            db.years[currentYear] = newPages; 
+            
+            if (db.pageMeta && db.pageMeta[currentYear] && db.pageMeta[currentYear][oldName]) {
+                db.pageMeta[currentYear][newName] = db.pageMeta[currentYear][oldName];
+                delete db.pageMeta[currentYear][oldName];
+            }
+            
+            currentPage = newName; save(); renderSidebar(); renderMainContent();
+        }
+
+        // --- FONCTION POUR METTRE À JOUR LA MOYENNE PROMO GLOBALE DE LA PAGE ---
+        function updatePagePromoAvg(el) {
+            if(!checkEditGuard()) { return; }
+            let val = el.innerText.trim();
+            
+            if(!db.pageMeta) db.pageMeta = {};
+            if(!db.pageMeta[currentYear]) db.pageMeta[currentYear] = {};
+            if(!db.pageMeta[currentYear][currentPage]) db.pageMeta[currentYear][currentPage] = {};
+            
+            if (val === '' || val === '-') {
+                db.pageMeta[currentYear][currentPage].promoAvg = null;
+                save(); renderMainContent();
+                return;
+            }
+            
+            let num = parseFloat(val.replace(',','.'));
+            if(isNaN(num) || num < 0 || num > 20) { 
+                let old = db.pageMeta[currentYear][currentPage].promoAvg;
+                el.innerText = (old !== undefined && old !== null) ? old : '-'; 
+                return; 
+            }
+            
+            db.pageMeta[currentYear][currentPage].promoAvg = num;
+            save(); renderMainContent();
         }
 
         function updateSubjectField(field, sIdx, el) {
@@ -1108,6 +1174,16 @@
             const pages = db.years[yearName]; let sum = 0, count = 0;
             for (let pName in pages) { const avg = calcPageAvg(pages[pName]); if (avg !== null) { sum += avg; count++; } } return count === 0 ? null : sum / count;
         }
+        function calcYearPromoAvg(yearName) {
+            if (!db.pageMeta || !db.pageMeta[yearName]) return null;
+            let sum = 0, count = 0;
+            for (let p in db.pageMeta[yearName]) {
+                let val = db.pageMeta[yearName][p].promoAvg;
+                if (val !== undefined && val !== null) { sum += val; count++; }
+            }
+            return count === 0 ? null : sum / count;
+        }
+
         function formatVal(v) { return v !== null && !isNaN(v) ? v.toFixed(2) : '--'; }
         function getBadgeClass(v) { return v >= 14 ? 'bg-good' : (v >= 10 ? 'bg-medium' : 'bg-bad'); }
         function getTextClass(v) { return v >= 14 ? 'text-good' : (v >= 10 ? 'text-medium' : 'text-bad'); }
@@ -1262,10 +1338,23 @@
             if (activeView === 'page') {
                 const pageAvg = calcPageAvg(db.years[currentYear][currentPage]);
                 
+                // Récupération de la moyenne promo globale de la page
+                if(!db.pageMeta) db.pageMeta = {};
+                let meta = (db.pageMeta[currentYear] && db.pageMeta[currentYear][currentPage]) ? db.pageMeta[currentYear][currentPage] : {};
+                let pPromoAvg = (meta.promoAvg !== undefined && meta.promoAvg !== null) ? meta.promoAvg : '';
+                
                 title.innerHTML = `
                     <span id="dynamic-page-title" class="${isEditMode ? 'editable-text' : ''} title-text-ellipsis" contenteditable="${isEditMode}" data-fulltext="${currentPage}" onblur="updatePageName('${currentPage}', this)" onkeydown="handleEditableKeydown(event, this)">${currentPage}</span>
                     <button class="icon-btn danger-zone edit-only" style="flex-shrink: 0;" onclick="deletePage()">${svgTrash}</button>
-                    <div class="badge badge-large ${getBadgeClass(pageAvg)} title-badge" style="margin-left: auto;"><span class="moy-text">Moyenne : </span>${formatVal(pageAvg)}</div>
+                    <div style="display:flex; gap:8px; margin-left:auto; align-items:center; flex-wrap:wrap; justify-content:flex-end;">
+                        <div class="badge badge-large" style="background:var(--bg-card-hover); color:var(--txt-secondaire); border:1px solid var(--separator);">
+                            <span class="moy-text" style="font-weight:normal; font-size:13px;">Promo : </span>
+                            <span class="${isEditMode ? 'editable-text' : ''}" style="font-weight:700;" contenteditable="${isEditMode}" data-placeholder="-" onblur="updatePagePromoAvg(this)" onkeydown="handleEditableKeydown(event, this)">${isEditMode ? pPromoAvg : (pPromoAvg !== '' ? pPromoAvg : '-')}</span>
+                        </div>
+                        <div class="badge badge-large ${getBadgeClass(pageAvg)} title-badge">
+                            <span class="moy-text">Moyenne : </span>${formatVal(pageAvg)}
+                        </div>
+                    </div>
                 `;
                 
                 const pageData = db.years[currentYear][currentPage] || [];
@@ -1381,13 +1470,26 @@
                 
                 let labels = [], datasets = [];
                 let viewHtml = `<div class="bilan-grid">`;
+                
                 const yAvg = calcYearAvg(currentYear);
-                viewHtml += `<div class="stat-card featured" style="grid-column: 1 / -1;"><h4>Moyenne de l'Année</h4><p>${formatVal(yAvg)}</p></div>`;
+                const yPromoAvg = calcYearPromoAvg(currentYear);
+                
+                viewHtml += `<div class="stat-card featured" style="grid-column: 1 / -1; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <h4 style="margin-bottom:0;">Moyenne de l'Année</h4>
+                    <p>${formatVal(yAvg)}</p>
+                    ${yPromoAvg !== null ? `<div style="font-size:14px; margin-top:8px; opacity:0.8; font-weight:600;">Moyenne Promo : ${formatVal(yPromoAvg)}</div>` : ''}
+                </div>`;
 
                 if (db.years[currentYear]) {
                     for (let pName in db.years[currentYear]) {
                         const pAvg = calcPageAvg(db.years[currentYear][pName]);
-                        viewHtml += `<div class="stat-card"><h4>${pName}</h4><p class="${getTextClass(pAvg)}">${formatVal(pAvg)}</p></div>`;
+                        const pPromo = (db.pageMeta && db.pageMeta[currentYear] && db.pageMeta[currentYear][pName] && db.pageMeta[currentYear][pName].promoAvg) ? db.pageMeta[currentYear][pName].promoAvg : null;
+                        
+                        viewHtml += `<div class="stat-card">
+                            <h4>${pName}</h4>
+                            <p class="${getTextClass(pAvg)}">${formatVal(pAvg)}</p>
+                            ${pPromo !== null ? `<div style="font-size:13px; color:var(--txt-secondaire); margin-top:5px; font-weight:600;">Promo : ${formatVal(pPromo)}</div>` : ''}
+                        </div>`;
                         db.years[currentYear][pName].forEach(sub => { if (!labels.includes(sub.name)) labels.push(sub.name); });
                     }
                 }
@@ -1454,7 +1556,14 @@
                 
                 for (let yName in db.years) {
                     const yAvg = calcYearAvg(yName);
-                    cardsHtml += `<div class="stat-card"><h4>${yName}</h4><p class="${getTextClass(yAvg)}">${formatVal(yAvg)}</p></div>`;
+                    const yPromoAvg = calcYearPromoAvg(yName);
+                    
+                    cardsHtml += `<div class="stat-card">
+                        <h4>${yName}</h4>
+                        <p class="${getTextClass(yAvg)}">${formatVal(yAvg)}</p>
+                        ${yPromoAvg !== null ? `<div style="font-size:13px; color:var(--txt-secondaire); margin-top:5px; font-weight:600;">Promo : ${formatVal(yPromoAvg)}</div>` : ''}
+                    </div>`;
+                    
                     if (yAvg !== null) { 
                         sumGlobal += yAvg; countGlobal++; labels.push(yName); 
                         dataVals.push(parseFloat(yAvg.toFixed(2))); 
