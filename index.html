@@ -112,7 +112,8 @@
 
         body { 
             display: flex; 
-            min-height: 100vh; min-height: 100dvh; 
+            /* On remet height strict pour forcer le scroll dans le conteneur enfant */
+            height: 100vh; height: 100dvh; 
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; 
             background-color: var(--bg-cahier); 
@@ -128,11 +129,11 @@
         }
 
         .sidebar { 
-            width: 280px; background-color: var(--bg-feuillet); 
+            width: 280px; background-color: var(--bg-feuillet); height: 100%;
             display: flex; flex-direction: column; border-right: 1px solid var(--separator); z-index: 100; 
             transition: width 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.2s ease, transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             overflow: hidden; white-space: nowrap; flex-shrink: 0;
-            padding-top: env(safe-area-inset-top);
+            padding-top: env(safe-area-inset-top, 0px);
         }
 
         body.sidebar-hidden .sidebar { 
@@ -190,7 +191,8 @@
         }
         
         .sidebar-footer { 
-            padding: 12px 12px calc(12px + env(safe-area-inset-bottom)) 12px; 
+            /* Fallback à 0px ajouté pour éviter les plantages CSS */
+            padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; 
             display: flex; 
             gap: 8px; 
             border-top: 1px solid var(--separator); 
@@ -201,14 +203,14 @@
         .btn-history:disabled { color: var(--txt-secondaire); cursor: not-allowed; opacity: 0.5;}
 
         .main-content {
-            flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative;
+            flex: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; height: 100%;
             background-image: linear-gradient(var(--color-grid) 1px, transparent 1px), linear-gradient(90deg, var(--color-grid) 1px, transparent 1px);
             background-size: 20px 20px;
-            padding-bottom: calc(40px + env(safe-area-inset-bottom));
+            padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
         }
 
         .topbar { 
-            padding: calc(15px + env(safe-area-inset-top)) 40px 15px; 
+            padding: calc(15px + env(safe-area-inset-top, 0px)) 40px 15px; 
             display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 50; 
             background: var(--bg-topbar); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-bottom: 1px solid var(--separator); min-height: 75px;
             transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -524,14 +526,14 @@
         .modal-btn.bold { font-weight: 600; }
 
         @media (max-width: 1024px) {
-            .topbar { padding: calc(12px + env(safe-area-inset-top)) 20px 12px; min-height: 60px; }
+            .topbar { padding: calc(12px + env(safe-area-inset-top, 0px)) 20px 12px; min-height: 60px; }
             .topbar h1 { font-size: 24px; }
             .badge-large { font-size: 14px; padding: 4px 10px; }
             
             .sidebar { 
                 position: fixed; top: 0; left: 0; 
                 height: 100dvh;
-                padding-bottom: env(safe-area-inset-bottom);
+                padding-bottom: env(safe-area-inset-bottom, 0px);
                 z-index: 100; box-shadow: 4px 0 15px rgba(0,0,0,0.1);
                 transform: translateX(0); width: 280px !important; opacity: 1 !important;
             }
@@ -551,7 +553,7 @@
         }
 
         @media (max-width: 500px) {
-            .topbar { padding: calc(15px + env(safe-area-inset-top)) 12px 10px; gap: 8px; }
+            .topbar { padding: calc(15px + env(safe-area-inset-top, 0px)) 12px 10px; gap: 8px; }
             .topbar-left { gap: 6px; } 
             .topbar h1 { font-size: 18px; }
             .topbar-actions { gap: 6px; }
