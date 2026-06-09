@@ -112,7 +112,7 @@
 
         body { 
             display: flex; 
-            /* On remet height strict pour forcer le scroll dans le conteneur enfant */
+            /* On restaure height strict pour le défilement */
             height: 100vh; height: 100dvh; 
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif; 
@@ -191,7 +191,6 @@
         }
         
         .sidebar-footer { 
-            /* Fallback à 0px ajouté pour éviter les plantages CSS */
             padding: 12px 12px calc(12px + env(safe-area-inset-bottom, 0px)) 12px; 
             display: flex; 
             gap: 8px; 
@@ -222,8 +221,8 @@
         .topbar h1 { 
             font-size: 32px; font-weight: 700; letter-spacing: -0.8px; margin: 0; line-height: 1; 
             display: flex; align-items: center; gap: 10px; color: var(--txt-primaire);
-            flex: 1; min-width: 0;
-            white-space: nowrap; 
+            flex: 1; min-width: 0; flex-shrink: 1;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
         
         .title-text-ellipsis { white-space: nowrap; overflow: hidden; display: inline-block; }
@@ -234,11 +233,12 @@
         }
         .sidebar-toggle-btn:hover { background-color: rgba(0, 122, 255, 0.1); }
         
-        .topbar-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;}
+        /* Flex-wrap nowrap empeche les boutons de sauter à la ligne et de "mordre" la topbar */
+        .topbar-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; flex-wrap: nowrap; justify-content: flex-end;}
 
         .ios-pill-btn {
             display: inline-flex; align-items: center; justify-content: center; padding: 6px 16px; border-radius: 50px; font-size: 14px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s ease; border: none; user-select: none; gap: 6px;
+            cursor: pointer; transition: all 0.2s ease; border: none; user-select: none; gap: 6px; flex-shrink: 0;
         }
 
         .sim-toggle-pill { background-color: var(--system-gray6); color: var(--txt-secondaire); }
@@ -553,10 +553,15 @@
         }
 
         @media (max-width: 500px) {
-            .topbar { padding: calc(15px + env(safe-area-inset-top, 0px)) 12px 10px; gap: 8px; }
+            .topbar { 
+                /* Espacement symétrique pour centrer le contenu sous l'encoche */
+                padding: calc(12px + env(safe-area-inset-top, 0px)) 12px 12px; 
+                gap: 8px; 
+            }
             .topbar-left { gap: 6px; } 
             .topbar h1 { font-size: 18px; }
-            .topbar-actions { gap: 6px; }
+            /* nowrap empeche les boutons de passer à la ligne et de déborder */
+            .topbar-actions { gap: 8px; flex-wrap: nowrap; }
             
             .ios-pill-btn { 
                 padding: 0; 
@@ -566,6 +571,7 @@
                 display: flex;
                 justify-content: center; 
                 align-items: center; 
+                flex-shrink: 0;
             }
             
             .ios-pill-btn span.btn-text { display: none; }
